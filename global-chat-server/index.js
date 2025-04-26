@@ -49,10 +49,10 @@ const io = new Server(server, {
 
 app.use(cors());
 
-let count = 1;
+// let count = 1;
 
 io.on("connection", (socket) => {
-  console.log("🔌 A user connected " + count++);
+  // console.log("🔌 A user connected ");
 
   socket.on("join", (username) => {
     socket.username = username;
@@ -83,5 +83,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(5000, () => {
-  console.log("🚀 Server running on http://localhost:5000");
+  console.log("🚀 Server running on PORT:5000");
 });
