@@ -184,7 +184,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
   }, [isAtBottom]);
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div className="flex flex-col h-[100dvh] bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Header */}
       <header className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4 bg-blue-600 text-white shadow-md">
         <div className="font-medium text-sm sm:text-base order-1 sm:order-1 flex items-center gap-2">
