@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+
+/* Base Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f0f0f0; /* Light mode default */
+    border-radius: 8px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #3b82f6; /* Tailwind blue-500 */
+    border-radius: 8px;
+    border: 2px solid #f0f0f0;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2563eb; /* Tailwind blue-600 */
+  }
+  
+  /* Dark mode overrides */
+  html.dark ::-webkit-scrollbar-track {
+    background: #1f2937; /* gray-800 */
+  }
+  
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #60a5fa; /* lighter blue */
+    border: 2px solid #1f2937;
+  }
+  
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #3b82f6; /* blue-500 */
+    cursor: pointer;
+  }
+  
