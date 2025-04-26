@@ -314,16 +314,18 @@ export default function ChatRoom({ username, handleChangeUsername }) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }} // 👈 important: exit animation
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute bottom-12 right-0 z-10"
+                className="absolute bottom-12 -right-17 min-[500px]:right-0 max-[500px]:max-w-screen max-[500px]:-right-20 z-10"
               >
-                <EmojiPicker
-                  onEmojiClick={(emojiData) => {
-                    setInput((prev) => prev + emojiData.emoji);
-                    setShowEmojiPicker(false);
-                  }}
-                />
+                <div className="overflow-x-auto">
+                  <EmojiPicker
+                    onEmojiClick={(emojiData) => {
+                      setInput((prev) => prev + emojiData.emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
