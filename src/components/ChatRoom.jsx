@@ -299,7 +299,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
           onChange={handleInputChange}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="Type your message..."
-          className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="flex-1 min-w-20 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
         <div className="relative">
           <button
