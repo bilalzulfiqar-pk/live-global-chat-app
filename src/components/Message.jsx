@@ -39,7 +39,7 @@ export default function Message({ msg, self }) {
             </div>
           )}
           {/* Message Text */}
-          <div className="text-sm">{msg.text}</div>
+          <div className="text-sm break-words">{msg.text}</div>
           {/* Timestamp */}
           {msg.time && (
             <div className={`text-xs mt-1 opacity-60 ${self ? "text-right" : "text-left"}`}>
