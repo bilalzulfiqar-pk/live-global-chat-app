@@ -1,16 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import Message from "./Message";
 import socket from "../socket";
-import EmojiPicker from "emoji-picker-react";
+// import EmojiPicker from "emoji-picker-react";
 import ThemeToggle from "./ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence for exit animations
+import { EmojiButton } from "@joeattardi/emoji-button";
 
 export default function ChatRoom({ username, handleChangeUsername }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [typingUser, setTypingUser] = useState("");
   const chatEndRef = useRef(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  // const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const emojiButtonRef = useRef(null); // holds the picker instance
+  const emojiTriggerRef = useRef(null); // attach to your 😊 button
+
   const messageSound = useRef(new Audio("/notification.mp3"));
   const [activeUsers, setActiveUsers] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false); // State to toggle sidebar
@@ -81,6 +86,48 @@ export default function ChatRoom({ username, handleChangeUsername }) {
       socket.disconnect();
     };
   }, [username]);
+
+  useEffect(() => {
+    // create the picker once
+    // const picker = new EmojiButton({
+    //   position: "top-end", // auto-positions around the trigger
+    //   zIndex: 1000,
+    // });
+
+    // read the current class on <html> and tell the picker
+    const isDark = document.documentElement.classList.contains("dark");
+    const picker = new EmojiButton({
+      position: "top-end",
+      zIndex: 1000,
+      theme: isDark ? "dark" : "light",
+      autoFocusSearch: false,
+    });
+
+    // when an emoji is clicked...
+    picker.on("emoji", (selection) => {
+      setInput((prev) => prev + selection.emoji);
+    });
+
+    // save the instance and wire up your button
+    emojiButtonRef.current = picker;
+    const btn = emojiTriggerRef.current;
+    btn.addEventListener("click", () => picker.togglePicker(btn));
+
+    // cleanup on unmount
+    return () => {
+      picker.destroyPicker();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handle = (e) => {
+      // e.detail is "light" or "dark"
+      emojiButtonRef.current?.setTheme(e.detail);
+    };
+
+    window.addEventListener("themeChange", handle);
+    return () => window.removeEventListener("themeChange", handle);
+  }, []);
 
   const handleSend = () => {
     if (input.trim()) {
@@ -303,32 +350,12 @@ export default function ChatRoom({ username, handleChangeUsername }) {
         />
         <div className="relative">
           <button
+            ref={emojiTriggerRef}
             type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             className="cursor-pointer py-2 text-xl bg-gray-200 dark:bg-gray-600 rounded-full w-[44px] hover:bg-gray-300 dark:hover:bg-gray-500 transition"
           >
             😊
           </button>
-          <AnimatePresence>
-            {showEmojiPicker && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="absolute bottom-12 -right-17 min-[500px]:right-0 max-[500px]:max-w-screen max-[500px]:-right-20 z-10"
-              >
-                <div className="overflow-x-auto">
-                  <EmojiPicker
-                    onEmojiClick={(emojiData) => {
-                      setInput((prev) => prev + emojiData.emoji);
-                      setShowEmojiPicker(false);
-                    }}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
         <button
           onClick={handleSend}
