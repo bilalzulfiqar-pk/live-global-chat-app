@@ -5,6 +5,8 @@ import socket from "../socket";
 import ThemeToggle from "./ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence for exit animations
 import { EmojiButton } from "@joeattardi/emoji-button";
+import { Smile, Send } from "lucide-react";
+import { FaUser } from "react-icons/fa";
 
 export default function ChatRoom({ username, handleChangeUsername }) {
   const [messages, setMessages] = useState([]);
@@ -194,9 +196,12 @@ export default function ChatRoom({ username, handleChangeUsername }) {
   }, []);
 
   useEffect(() => {
-    if (isAtBottom && typingUser) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    if (!isAtBottom) return;
+
+    chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+
+    // console.log("typingUser", typingUser);
+    // console.log("isAtBottom", isAtBottom);
   }, [messages, typingUser]);
 
   useEffect(() => {
@@ -235,21 +240,22 @@ export default function ChatRoom({ username, handleChangeUsername }) {
       {/* Header */}
       <header className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4 bg-blue-600 text-white shadow-md">
         <div className="font-medium text-sm sm:text-base order-1 sm:order-1 flex items-center gap-2">
-          👤 <span className="font-semibold">{username}</span>
+          <FaUser className="text-lg dark:text-[#101828]" />{" "}
+          <span className="font-semibold dark:text-[#101828]">{username}</span>
           <button
             onClick={handleChangeUsername}
-            className="text-xs bg-blue-500 cursor-pointer text-white px-2 py-1 rounded hover:bg-[#2b75ff] transition-colors duration-300"
+            className="text-xs bg-blue-500 cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#374151] py-1 rounded-xl hover:bg-[#2b75ff] transition-colors duration-300"
           >
             Change
           </button>
         </div>
 
         {/* Active Users Count (Only the total number) */}
-        <div className="text-sm sm:text-base order-3 w-full sm:w-auto sm:order-2">
+        <div className="text-sm sm:text-base dark:text-[#101828] order-3 w-full sm:w-auto sm:order-2">
           <strong>🟢 Active Users: {activeUsers.length}</strong>
           <button
             onClick={() => setSidebarOpen(true)}
-            className="ml-4 text-white cursor-pointer bg-blue-500 px-2 py-1 rounded-md hover:bg-[#2b75ff] transition-colors duration-300"
+            className="ml-2.5 text-white dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#374151] cursor-pointer bg-blue-500 px-2.5 pr-3 py-1.5 rounded-full hover:bg-[#2b75ff] transition-colors duration-300 text-sm"
           >
             View Full List
           </button>
@@ -341,28 +347,34 @@ export default function ChatRoom({ username, handleChangeUsername }) {
 
       {/* Input Area */}
       <div className="flex items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gap-2">
-        <input
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type your message..."
-          className="flex-1 min-w-20 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        <div className="relative">
+        <div className="flex items-center w-full bg-gray-100 dark:bg-gray-700 rounded-full">
+          <div className="relative">
+            <button
+              ref={emojiTriggerRef}
+              type="button"
+              className="cursor-pointer py-2 text-[#555E63] dark:text-gray-400 text-xl flex justify-center items-center rounded-full w-[44px]  duration-300 transition"
+            >
+              <Smile />
+            </button>
+          </div>
+          <input
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder="Type your message..."
+            className="flex-1 min-w-20 py-2 rounded-lg bg-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none"
+            autoComplete="off" // disables browser history suggestions
+            autoCorrect="off" // iOS autocorrect
+            autoCapitalize="off" // iOS auto‐capitalize
+            spellCheck="false" // no red underlines
+          />
           <button
-            ref={emojiTriggerRef}
-            type="button"
-            className="cursor-pointer py-2 text-xl bg-gray-200 dark:bg-gray-600 rounded-full w-[44px] hover:bg-gray-300 dark:hover:bg-gray-500 transition"
+            onClick={handleSend}
+            className="px-4 py-2.5 rounded-full text-[#555E63] dark:text-gray-300 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
           >
-            😊
+            <Send className="w-6 h-6" />
           </button>
         </div>
-        <button
-          onClick={handleSend}
-          className="px-4 py-2 rounded-lg text-white bg-blue-600 cursor-pointer hover:bg-blue-700 transition"
-        >
-          Send
-        </button>
       </div>
 
       {/* Off-Canvas Sidebar for Active Users */}
@@ -389,7 +401,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
                 {activeUsers.map((user, idx) => (
                   <li
                     key={idx}
-                    className="bg-blue-500 px-4 py-2 rounded-md text-white flex justify-between items-center"
+                    className="bg-blue-500 px-4 py-2 rounded-md text-white dark:text-[#101828] flex justify-between items-center"
                   >
                     <span>
                       {idx + 1}. {user}

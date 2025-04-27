@@ -272,7 +272,7 @@ export default function ThemeToggle() {
     theme === "system"
       ? localStorage.removeItem("theme")
       : (localStorage.theme = theme);
-      
+
     // ▶️ fire a global event with the actual mode
     window.dispatchEvent(
       new CustomEvent("themeChange", { detail: appliedTheme })
