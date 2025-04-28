@@ -119,6 +119,29 @@ io.on("connection", (socket) => {
     io.emit("active-users", uniqueUsers);
   });
 
+  socket.on("change-username", ({ clientId, oldName, newName }) => {
+    // 1️⃣ Update the master clientMap
+    const finalName = getUniqueUsername(newName);
+    clientMap.set(clientId, finalName);
+  
+    // 2️⃣ Propagate to all open sockets/tabs for that client
+    const socketsSet = clientSockets.get(clientId) || new Set();
+    for (const sid of socketsSet) {
+      // Find the Socket instance and update its .username
+      const sock = io.sockets.sockets.get(sid);
+      if (sock) {
+        sock.username = finalName;
+        users.set(sid, finalName);
+      }
+    }
+  
+    // 3️⃣ Broadcast to everyone:
+    //   • a system event so clients can show “Alice changed name to Alicia”
+    //   • the updated active-users roster
+    io.emit("username-changed", { clientId, oldName, newName: finalName });
+    io.emit("active-users", Array.from(new Set(users.values())));
+  });
+
   socket.on("typing", () => {
     socket.broadcast.emit("user-typing", socket.username);
   });

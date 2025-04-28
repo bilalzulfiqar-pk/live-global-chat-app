@@ -31,6 +31,8 @@ export default function ChatRoom({
   const [newMessages, setNewMessages] = useState(false); // For tracking new messages
   const [isAtBottom, setIsAtBottom] = useState(null);
   const requestedNameRef = useRef(username);
+  const clientIdRef = useRef(null);
+
 
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
@@ -40,6 +42,8 @@ export default function ChatRoom({
     }
 
     requestedNameRef.current = username;
+    clientIdRef.current = clientId;
+
 
     if (!socket.connected) {
       socket.connect();
@@ -82,6 +86,22 @@ export default function ChatRoom({
     socket.on("username-assigned", handleAssigned);
 
     socket.emit("join", { clientId, desiredName: username });
+
+    socket.on("username-changed", ({ clientId, oldName, newName }) => {
+      // 1) push a System message
+      setMessages(prev => [
+        ...prev,
+        { id: Date.now(),
+          user: "System",
+          text: `${oldName} changed name to ${newName}` }
+      ]);
+    
+      // 2) if it’s you, update your tab’s username + localStorage
+      if (clientId === clientIdRef.current) {
+        setUsername(newName);
+        localStorage.setItem("chatapp-username", newName);
+      }
+    });
 
     socket.on("user-joined", (msg) => {
       setMessages((prev) => [
@@ -139,6 +159,7 @@ export default function ChatRoom({
       socket.off("active-users");
       // socket.off("username-assigned");
       socket.off("username-assigned", handleAssigned);
+      socket.off("username-changed");
       socket.disconnect(clientId);
     };
   }, []);
