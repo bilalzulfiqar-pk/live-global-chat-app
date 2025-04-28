@@ -297,7 +297,7 @@ export default function ThemeToggle() {
   return (
     <div
       role="radiogroup"
-      className="relative flex bg-gray-200 dark:bg-gray-700 gap-0.5 rounded-full p-1"
+      className="relative flex bg-gray-200 dark:bg-[#1E2939] gap-0.5 rounded-full p-1" //dark:bg-gray-700
       style={{ padding: 4 }} // ensure consistent 4px padding
     >
       {/* Sliding indicator */}

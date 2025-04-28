@@ -55,10 +55,25 @@ io.on("connection", (socket) => {
   // console.log("🔌 A user connected ");
 
   socket.on("join", (username) => {
-    socket.username = username;
-    users.set(socket.id, username);
-    io.emit("user-joined", `${username} joined the chat`);
-    io.emit("active-users", Array.from(users.values())); // broadcast updated list
+    // socket.username = username;
+    // users.set(socket.id, username);
+    // io.emit("user-joined", `${username} joined the chat`);
+    // io.emit("active-users", Array.from(users.values())); // broadcast updated list
+
+    // pick a unique one
+    const uniqueName = getUniqueUsername(username);
+    // console.log("Unique name:", uniqueName);
+
+    // assign and store
+    socket.username = uniqueName;
+    users.set(socket.id, uniqueName);
+
+    // let *this* client know their final name
+    socket.emit("username-assigned", uniqueName);
+
+    // announce join under the final name
+    io.emit("user-joined", `${uniqueName} joined the chat`);
+    io.emit("active-users", Array.from(users.values()));
   });
 
   socket.on("typing", () => {
@@ -81,6 +96,23 @@ io.on("connection", (socket) => {
     }
   });
 });
+
+/**
+ * Given a desired name, return it if unused,
+ * otherwise append “-1”, “-2”, … until it’s unique.
+ */
+function getUniqueUsername(desired) {
+  const existing = Array.from(users.values());
+  if (!existing.includes(desired)) return desired;
+
+  let counter = 1;
+  let candidate = `${desired}-${counter}`;
+  while (existing.includes(candidate)) {
+    counter++;
+    candidate = `${desired}-${counter}`;
+  }
+  return candidate;
+}
 
 server.listen(process.env.PORT || 5000, () => {
   console.log(`🚀 Server running on PORT:${process.env.PORT || 5000}`);

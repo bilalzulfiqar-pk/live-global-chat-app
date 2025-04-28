@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import JoinScreen from "./components/JoinScreen";
 import ChatRoom from "./components/ChatRoom";
+import { Toaster } from "react-hot-toast";
 
 function App() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(null);
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
@@ -24,8 +25,12 @@ function App() {
 
   return (
     <>
+    <Toaster 
+        position="top-center" 
+        toastOptions={{ duration: 3000 }} 
+      />
       {username ? (
-        <ChatRoom username={username} handleChangeUsername={handleChangeUsername} />
+        <ChatRoom username={username} handleChangeUsername={handleChangeUsername} setUsername={setUsername} />
       ) : (
         <JoinScreen onJoin={handleJoin} />
       )}

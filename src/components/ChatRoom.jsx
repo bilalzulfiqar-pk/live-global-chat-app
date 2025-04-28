@@ -7,8 +7,13 @@ import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresen
 import { EmojiButton } from "@joeattardi/emoji-button";
 import { Smile, Send } from "lucide-react";
 import { FaUser } from "react-icons/fa";
+import toast from "react-hot-toast";
 
-export default function ChatRoom({ username, handleChangeUsername }) {
+export default function ChatRoom({
+  username,
+  handleChangeUsername,
+  setUsername,
+}) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [typingUser, setTypingUser] = useState("");
@@ -29,6 +34,26 @@ export default function ChatRoom({ username, handleChangeUsername }) {
     if (!socket.connected) {
       socket.connect();
     }
+
+    // capture the name *before* the server assigns it
+    let requestedName = username;
+    // console.log("requestedName", requestedName);
+
+    // listen for final, unique name
+    socket.on("username-assigned", (finalName) => {
+      // replace your local username (so header, typing, etc. all match)
+      setUsername(finalName);
+      // localStorage.setItem("username", finalName);
+
+      // only toast if the server actually changed it
+      if (finalName !== requestedName) {
+        // clear any existing toast
+        // toast.dismiss();
+        toast.success(`${requestedName} was taken. You’re now ${finalName}`);
+      }
+
+      // console.log("Assigned name:", finalName);
+    });
 
     socket.emit("join", username);
 
@@ -76,6 +101,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
 
     socket.on("active-users", (users) => {
       setActiveUsers(users);
+      // console.log("Active users:", users);
     });
 
     return () => {
@@ -85,9 +111,10 @@ export default function ChatRoom({ username, handleChangeUsername }) {
       socket.off("user-typing");
       socket.off("user-stop-typing");
       socket.off("active-users");
+      socket.off("username-assigned");
       socket.disconnect();
     };
-  }, [username]);
+  }, []);
 
   useEffect(() => {
     // create the picker once
@@ -238,24 +265,33 @@ export default function ChatRoom({ username, handleChangeUsername }) {
   return (
     <div className="flex flex-col h-[100dvh] bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Header */}
-      <header className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4 bg-blue-600 text-white shadow-md">
+      {/* dark:bg-gradient-to-r dark:from-[#2C3E50] dark:via-[#34495E] dark:to-[#5D6D7E]
+      dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
+      dark:bg-gradient-to-r dark:from-[#3E4A59] dark:via-[#2C3D49] dark:to-[#4F677C]
+      */}
+      <header
+        className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4
+    bg-gradient-to-l from-teal-400 via-blue-500 to-indigo-600
+    dark:bg-gradient-to-r dark:from-[#3B4D64] sm:dark:via-[#2D3748] dark:via-[#3e4c62]  dark:to-[#4A5568]
+    text-white shadow-md"
+      >
         <div className="font-medium text-sm sm:text-base order-1 sm:order-1 flex items-center gap-2">
-          <FaUser className="text-lg dark:text-[#101828]" />{" "}
-          <span className="font-semibold dark:text-[#101828]">{username}</span>
+          <FaUser className="text-lg dark:text-white" />{" "}
+          <span className="font-semibold dark:text-white">{username}</span>
           <button
             onClick={handleChangeUsername}
-            className="text-xs bg-blue-500 cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#374151] py-1 rounded-xl hover:bg-[#2b75ff] transition-colors duration-300"
+            className="text-xs bg-blue-600 shadow-2xs cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#171e29] py-1 rounded-xl hover:bg-blue-700 transition-colors duration-300"
           >
             Change
           </button>
         </div>
 
         {/* Active Users Count (Only the total number) */}
-        <div className="text-sm sm:text-base dark:text-[#101828] order-3 w-full sm:w-auto sm:order-2">
+        <div className="text-sm sm:text-base dark:text-white order-3 w-full sm:w-auto sm:order-2">
           <strong>🟢 Active Users: {activeUsers.length}</strong>
           <button
             onClick={() => setSidebarOpen(true)}
-            className="ml-2.5 text-white dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#374151] cursor-pointer bg-blue-500 px-2.5 pr-3 py-1.5 rounded-full hover:bg-[#2b75ff] transition-colors duration-300 text-sm"
+            className="ml-2.5 text-white dark:text-gray-300 shadow-sm dark:bg-[#1E2939] dark:hover:bg-[#171e29] cursor-pointer bg-blue-600 px-2.5 pr-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors duration-300 text-sm"
           >
             View Full List
           </button>
@@ -352,7 +388,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
             <button
               ref={emojiTriggerRef}
               type="button"
-              className="cursor-pointer py-2 text-[#555E63] dark:text-gray-400 text-xl flex justify-center items-center rounded-full w-[44px]  duration-300 transition"
+              className="cursor-pointer py-2 text-[#555E63] hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-xl flex justify-center items-center rounded-full w-[44px]  duration-300 transition"
             >
               <Smile />
             </button>
@@ -370,7 +406,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
           />
           <button
             onClick={handleSend}
-            className="px-4 py-2.5 rounded-full text-[#555E63] dark:text-gray-300 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
+            className="px-4 py-2.5 rounded-full text-[#555E63] hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
           >
             <Send className="w-6 h-6" />
           </button>
@@ -401,7 +437,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
                 {activeUsers.map((user, idx) => (
                   <li
                     key={idx}
-                    className="bg-blue-500 px-4 py-2 rounded-md text-white dark:text-[#101828] flex justify-between items-center"
+                    className="bg-blue-500 px-4 py-2 rounded-lg text-white dark:text-[#101828] flex justify-between items-center"
                   >
                     <span>
                       {idx + 1}. {user}
@@ -411,7 +447,7 @@ export default function ChatRoom({ username, handleChangeUsername }) {
               </ul>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="absolute top-4 right-4 text-white bg-blue-500 hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
+                className="absolute cursor-pointer dark:text-[#101828] top-4 right-4 text-white bg-blue-500 hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
               >
                 ✕
               </button>
