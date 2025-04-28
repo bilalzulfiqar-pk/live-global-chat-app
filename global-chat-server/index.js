@@ -7,6 +7,8 @@ const app = express();
 const server = http.createServer(app);
 
 const users = new Map(); // socket.id => username
+const clientMap = new Map(); // clientId ⇒ username
+const clientSockets = new Map(); // clientId ⇒ Set of socket.ids
 
 // // Sample fake names (you can add more if needed)
 // const fakeNames = [
@@ -54,26 +56,67 @@ app.use(cors());
 io.on("connection", (socket) => {
   // console.log("🔌 A user connected ");
 
-  socket.on("join", (username) => {
+  socket.on("join", ({ clientId, desiredName }) => {
     // socket.username = username;
     // users.set(socket.id, username);
     // io.emit("user-joined", `${username} joined the chat`);
     // io.emit("active-users", Array.from(users.values())); // broadcast updated list
 
-    // pick a unique one
-    const uniqueName = getUniqueUsername(username);
-    // console.log("Unique name:", uniqueName);
+    // // pick a unique one
+    // const uniqueName = getUniqueUsername(username);
+    // // console.log("Unique name:", uniqueName);
 
-    // assign and store
-    socket.username = uniqueName;
-    users.set(socket.id, uniqueName);
+    // // assign and store
+    // socket.username = uniqueName;
+    // users.set(socket.id, uniqueName);
+
+    // // let *this* client know their final name
+    // socket.emit("username-assigned", uniqueName);
+
+    // // announce join under the final name
+    // io.emit("user-joined", `${uniqueName} joined the chat`);
+    // io.emit("active-users", Array.from(users.values()));
+
+    let finalName;
+
+    // If we’ve already seen this clientId, re-use their name:
+    if (clientMap.has(clientId)) {
+      finalName = clientMap.get(clientId);
+
+      // Otherwise, pick a fresh unique name for them:
+    } else {
+      finalName = getUniqueUsername(desiredName);
+      clientMap.set(clientId, finalName);
+    }
+
+    // 1️⃣ Track this socket under clientId
+    let set = clientSockets.get(clientId);
+    if (!set) {
+      set = new Set();
+      clientSockets.set(clientId, set);
+    }
+    const wasEmpty = set.size === 0;
+    set.add(socket.id);
+
+    // 2️⃣ Only announce if it’s the first tab for that clientId
+    if (wasEmpty) {
+      io.emit("user-joined", `${finalName} joined the chat`);
+    }
+
+    // Store under the new socket.id, announce, etc.
+    socket.username = finalName;
+    users.set(socket.id, finalName);
+
+    // stash it on the socket
+    socket.clientId = clientId;
 
     // let *this* client know their final name
-    socket.emit("username-assigned", uniqueName);
+    socket.emit("username-assigned", finalName);
 
-    // announce join under the final name
-    io.emit("user-joined", `${uniqueName} joined the chat`);
-    io.emit("active-users", Array.from(users.values()));
+    // io.emit("user-joined", `${finalName} joined the chat`);
+    // Dedupe so that two tabs don’t show up twice:
+    const uniqueUsers = Array.from(new Set(users.values()));
+    io.emit("active-users", uniqueUsers);
   });
 
   socket.on("typing", () => {
@@ -89,11 +132,36 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    if (socket.username) {
+    // console.log("🔌 A user disconnected ");
+    // console.log("Disconnected socket id:", socket.id);
+    // console.log("Disconnected username:", socket.username);  //-
+
+    const clientId = socket.clientId;
+    const set = clientSockets.get(clientId);
+
+    // console.log("Disconnected clientId:", clientId);
+    if (set) {
+      set.delete(socket.id);
       users.delete(socket.id);
-      io.emit("user-left", `${socket.username} left the chat`);
-      io.emit("active-users", Array.from(users.values())); // update on leave
+
+      // console.log("Size:", set.size);  //-
+
+      // 4️⃣ Only announce if that was the *last* tab
+      if (set.size === 0) {
+        clientSockets.delete(clientId);
+        io.emit("user-left", `${socket.username} left the chat`);
+      }
+
+      io.emit("active-users", Array.from(new Set(users.values())));
     }
+
+    // if (socket.username) {
+    //   users.delete(socket.id);
+    //   io.emit("user-left", `${socket.username} left the chat`);
+
+    //   const uniqueUsers = Array.from(new Set(users.values()));
+    //   io.emit("active-users", uniqueUsers); // update on leave
+    // }
   });
 });
 

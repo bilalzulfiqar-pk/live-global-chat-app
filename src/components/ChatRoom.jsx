@@ -8,6 +8,7 @@ import { EmojiButton } from "@joeattardi/emoji-button";
 import { Smile, Send } from "lucide-react";
 import { FaUser } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { v4 as uuidv4 } from "uuid";
 
 export default function ChatRoom({
   username,
@@ -29,33 +30,58 @@ export default function ChatRoom({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [newMessages, setNewMessages] = useState(false); // For tracking new messages
   const [isAtBottom, setIsAtBottom] = useState(null);
+  const requestedNameRef = useRef(username);
 
   useEffect(() => {
+    let clientId = localStorage.getItem("chatapp-ClientId");
+    if (!clientId) {
+      clientId = uuidv4();
+      localStorage.setItem("chatapp-ClientId", clientId);
+    }
+
+    requestedNameRef.current = username;
+
     if (!socket.connected) {
       socket.connect();
     }
 
-    // capture the name *before* the server assigns it
-    let requestedName = username;
-    // console.log("requestedName", requestedName);
-
-    // listen for final, unique name
-    socket.on("username-assigned", (finalName) => {
-      // replace your local username (so header, typing, etc. all match)
-      setUsername(finalName);
-      // localStorage.setItem("username", finalName);
-
-      // only toast if the server actually changed it
-      if (finalName !== requestedName) {
-        // clear any existing toast
-        // toast.dismiss();
-        toast.success(`${requestedName} was taken. You’re now ${finalName}`);
+    // listener
+    const handleAssigned = (finalName) => {
+      // Only toast if it really changed
+      if (finalName !== requestedNameRef.current) {
+        toast.success(
+          `${requestedNameRef.current} was taken. You’re now ${finalName}`
+        );
       }
+      // Update React state & localStorage
+      setUsername(finalName);
+      localStorage.setItem("chatapp-username", finalName);
+    };
 
-      // console.log("Assigned name:", finalName);
-    });
+    // // capture the name *before* the server assigns it
+    // let requestedName = username;
+    // // console.log("requestedName", requestedName);
 
-    socket.emit("join", username);
+    // // listen for final, unique name
+    // socket.on("username-assigned", (finalName) => {
+    //   // replace your local username (so header, typing, etc. all match)
+    //   setUsername(finalName);
+    //   localStorage.setItem("chatapp-username", finalName);
+
+    //   // only toast if the server actually changed it
+    //   if (finalName !== requestedName) {
+    //     // clear any existing toast
+    //     // toast.dismiss();
+    //     toast.success(`${requestedName} was taken. You’re now ${finalName}`);
+    //   }
+
+    //   // console.log("Assigned name:", finalName);
+    // });
+
+    // 4️⃣ Register listener and emit join
+    socket.on("username-assigned", handleAssigned);
+
+    socket.emit("join", { clientId, desiredName: username });
 
     socket.on("user-joined", (msg) => {
       setMessages((prev) => [
@@ -111,8 +137,9 @@ export default function ChatRoom({
       socket.off("user-typing");
       socket.off("user-stop-typing");
       socket.off("active-users");
-      socket.off("username-assigned");
-      socket.disconnect();
+      // socket.off("username-assigned");
+      socket.off("username-assigned", handleAssigned);
+      socket.disconnect(clientId);
     };
   }, []);
 
@@ -270,7 +297,7 @@ export default function ChatRoom({
       dark:bg-gradient-to-r dark:from-[#3E4A59] dark:via-[#2C3D49] dark:to-[#4F677C]
       */}
       {/* bg-gradient-to-l from-teal-400 via-blue-500 to-indigo-600  last 2b6dfc
-      */}   
+       */}
       <header
         className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4
     bg-gradient-to-l from-blue-400 via-blue-500 sm:to-blue-600 to-[#2b6dfc]
@@ -434,7 +461,9 @@ export default function ChatRoom({
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl text-blue-500 dark:text-white font-semibold mb-4">🟢 Active Users</h2>
+              <h2 className="text-xl text-blue-500 dark:text-white font-semibold mb-4">
+                🟢 Active Users
+              </h2>
               <ul className="space-y-2">
                 {activeUsers.map((user, idx) => (
                   <li
