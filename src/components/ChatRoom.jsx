@@ -427,19 +427,19 @@ export default function ChatRoom({
             transition={{ duration: 0.3 }}
           >
             <motion.div
-              className="absolute top-0 right-0 w-72 bg-white dark:bg-gray-800 text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg"
+              className="absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg"
               initial={{ x: "100%" }} // Initially off-screen to the right
               animate={{ x: 0 }} // Sidebar slides in
               exit={{ x: "100%" }} // Sidebar slides out to the right
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-semibold mb-4">🟢 Active Users</h2>
+              <h2 className="text-xl text-blue-500 dark:text-white font-semibold mb-4">🟢 Active Users</h2>
               <ul className="space-y-2">
                 {activeUsers.map((user, idx) => (
                   <li
                     key={idx}
-                    className="bg-blue-500 px-4 py-2 rounded-lg text-white dark:text-[#101828] flex justify-between items-center"
+                    className="bg-blue-500 dark:bg-[#1E2939] px-4 py-2 rounded-lg text-white dark:text-white flex justify-between items-center"
                   >
                     <span>
                       {idx + 1}. {user}
@@ -449,7 +449,7 @@ export default function ChatRoom({
               </ul>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="absolute cursor-pointer dark:text-[#101828] top-4 right-4 text-white bg-blue-500 hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
+                className="absolute cursor-pointer dark:text-white top-4 right-4 text-white bg-blue-500 dark:bg-[#1E2939] dark:hover:bg-[#171e29] hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
               >
                 ✕
               </button>

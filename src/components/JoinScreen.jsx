@@ -25,7 +25,7 @@ export default function JoinScreen({ onJoin }) {
         transition={{ duration: 1, ease: "easeOut" }}
         className="flex relative flex-col m-6 items-center justify-center transition-colors p-10 py-20 md:p-20 rounded-2xl shadow-lg bg-white dark:bg-gray-800 gap-6 w-md"
       >
-        <h1 className="text-3xl font-bold transition-colors text-gray-800 dark:text-white mb-2">
+        <h1 className="text-[27px] whitespace-nowrap sm:text-3xl font-bold transition-colors text-gray-800 dark:text-white mb-2">
           Live Global Chat
         </h1>
 
