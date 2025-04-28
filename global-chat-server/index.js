@@ -140,6 +140,9 @@ io.on("connection", (socket) => {
     //   • the updated active-users roster
     io.emit("username-changed", { clientId, oldName, newName: finalName });
     io.emit("active-users", Array.from(new Set(users.values())));
+
+    // 4️⃣ let the renaming client know their assigned name
+    // socket.emit("username-assigned", finalName);
   });
 
   socket.on("typing", () => {

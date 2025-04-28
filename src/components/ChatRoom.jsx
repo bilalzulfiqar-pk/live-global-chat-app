@@ -216,6 +216,7 @@ export default function ChatRoom({
           hour: "2-digit",
           minute: "2-digit",
         }),
+        clientId: clientIdRef.current, 
       };
 
       socket.emit("send-message", message);
@@ -286,7 +287,8 @@ export default function ChatRoom({
     if (messages.length === 0) return;
 
     const latestMessage = messages[messages.length - 1];
-    const isSelf = latestMessage.user === username;
+    // const isSelf = latestMessage.user === username;
+    const isSelf = latestMessage.clientId === clientIdRef.current;
     const isSystem = latestMessage.user === "System";
     // console.log("latestMessage", latestMessage);
     // console.log(latestMessage.user);
@@ -361,7 +363,7 @@ export default function ChatRoom({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Message msg={msg} self={msg.user === username} />
+            <Message msg={msg} self={msg.clientId === clientIdRef.current} />
           </motion.div>
         ))}
         <div
@@ -395,7 +397,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="fixed bottom-24 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition cursor-pointer"
+              className="fixed bottom-24 right-6 bg-blue-600 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-700 transition duration-300 cursor-pointer"
             >
               New messages below
             </motion.div>
@@ -410,7 +412,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="fixed cursor-pointer bottom-24 right-6 bg-blue-600 text-white p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition"
+              className="fixed cursor-pointer bottom-24 right-6 dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-600 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
