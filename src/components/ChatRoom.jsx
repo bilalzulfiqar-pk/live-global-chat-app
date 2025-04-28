@@ -269,9 +269,11 @@ export default function ChatRoom({
       dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
       dark:bg-gradient-to-r dark:from-[#3E4A59] dark:via-[#2C3D49] dark:to-[#4F677C]
       */}
+      {/* bg-gradient-to-l from-teal-400 via-blue-500 to-indigo-600  last 2b6dfc
+      */}   
       <header
         className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4
-    bg-gradient-to-l from-teal-400 via-blue-500 to-indigo-600
+    bg-gradient-to-l from-blue-400 via-blue-500 sm:to-blue-600 to-[#2b6dfc]
     dark:bg-gradient-to-r dark:from-[#3B4D64] sm:dark:via-[#2D3748] dark:via-[#3e4c62]  dark:to-[#4A5568]
     text-white shadow-md"
       >
@@ -280,7 +282,7 @@ export default function ChatRoom({
           <span className="font-semibold dark:text-white">{username}</span>
           <button
             onClick={handleChangeUsername}
-            className="text-xs bg-blue-600 shadow-2xs cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#171e29] py-1 rounded-xl hover:bg-blue-700 transition-colors duration-300"
+            className="text-xs shadow-2xs cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#171e29] py-1 rounded-xl bg-blue-400 hover:bg-blue-500 transition-colors duration-300"
           >
             Change
           </button>
@@ -291,7 +293,7 @@ export default function ChatRoom({
           <strong>🟢 Active Users: {activeUsers.length}</strong>
           <button
             onClick={() => setSidebarOpen(true)}
-            className="ml-2.5 text-white dark:text-gray-300 shadow-sm dark:bg-[#1E2939] dark:hover:bg-[#171e29] cursor-pointer bg-blue-600 px-2.5 pr-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors duration-300 text-sm"
+            className="ml-2.5 text-white dark:text-gray-300 shadow-sm dark:bg-[#1E2939] dark:hover:bg-[#171e29] cursor-pointer bg-blue-400 px-2.5 pr-3 py-1.5 rounded-full hover:bg-blue-500 transition-colors duration-300 text-sm"
           >
             View Full List
           </button>
