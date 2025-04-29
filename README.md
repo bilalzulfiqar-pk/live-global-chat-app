@@ -42,7 +42,7 @@ A real-time global chat application built with Socket.IO, Express, and React. Us
 
 1. **Clone the repository**  
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/bilalzulfiqar-pk/live-global-chat-app.git
    cd global-chat-app
    ```
 2. **Install dependencies**  
