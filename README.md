@@ -6,7 +6,7 @@ A real-time global chat application built with Socket.IO, Express, and React. Us
 
 ## Live Demo
 
-[https://live-global-chat-app.vercel.app/]
+https://live-global-chat-app.vercel.app/
 
 ---
 
