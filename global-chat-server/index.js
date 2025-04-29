@@ -10,7 +10,7 @@ const users = new Map(); // socket.id => username
 const clientMap = new Map(); // clientId ⇒ username
 const clientSockets = new Map(); // clientId ⇒ Set of socket.ids
 
-// // Sample fake names (you can add more if needed)
+// // Sample fake names (you can add more if needed) for testing
 // const fakeNames = [
 //   "John Doe",
 //   "Jane Smith",
@@ -99,9 +99,11 @@ io.on("connection", (socket) => {
     set.add(socket.id);
 
     // 2️⃣ Only announce if it’s the first tab for that clientId
-    if (wasEmpty) {
+    if (wasEmpty && !socket.isRenaming) {
       io.emit("user-joined", `${finalName} joined the chat`);
     }
+
+    socket.isRenaming = false;
 
     // Store under the new socket.id, announce, etc.
     socket.username = finalName;
@@ -123,7 +125,7 @@ io.on("connection", (socket) => {
     // 1️⃣ Update the master clientMap
     const finalName = getUniqueUsername(newName);
     clientMap.set(clientId, finalName);
-  
+
     // 2️⃣ Propagate to all open sockets/tabs for that client
     const socketsSet = clientSockets.get(clientId) || new Set();
     for (const sid of socketsSet) {
@@ -134,10 +136,13 @@ io.on("connection", (socket) => {
         users.set(sid, finalName);
       }
     }
-  
+
     // 3️⃣ Broadcast to everyone:
     //   • a system event so clients can show “Alice changed name to Alicia”
     //   • the updated active-users roster
+
+    socket.isRenaming = true;
+
     io.emit("username-changed", { clientId, oldName, newName: finalName });
     io.emit("active-users", Array.from(new Set(users.values())));
 
