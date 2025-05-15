@@ -18,7 +18,7 @@ export default function JoinScreen({ onJoin }) {
   };
 
   return (
-    <div className="flex items-center justify-center h-[100dvh] bg-gray-100 transition-colors dark:bg-gray-900 relative">
+    <div className="flex items-center justify-center h-[100vh] h-dvh-100 bg-gray-100 transition-colors dark:bg-gray-900 relative">
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}

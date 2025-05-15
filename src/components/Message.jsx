@@ -1,4 +1,14 @@
-export default function Message({ msg, self }) {
+import React, { useMemo } from "react";
+
+const emojiOnlyRegex =
+  /^(\s*(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier_Base})\s*)+$/u;
+const countEmojiRegex = /\p{Extended_Pictographic}/gu;
+
+function isEmojisOnly(text) {
+  return emojiOnlyRegex.test(text);
+}
+
+const Message = React.memo(function Message({ msg, self }) {
   // Generate a color for each username based on a simple hash
   const getUserColor = (userName) => {
     const colors = [
@@ -27,6 +37,27 @@ export default function Message({ msg, self }) {
     );
   }
 
+  // const isEmojisOnly = (text) => {
+  //   const emojiOnlyRegex =
+  //     /^(\s*(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier_Base})\s*)+$/u;
+  //   return emojiOnlyRegex.test(text);
+  // };
+
+  // const isOnlyEmojis = isEmojisOnly(msg.text);
+  // const emojiCount = isOnlyEmojis
+  //   ? (msg.text.match(/\p{Extended_Pictographic}/gu) || []).length
+  //   : 0;
+
+  const { isOnlyEmojis, emojiCount } = useMemo(() => {
+    const only = isEmojisOnly(msg.text);
+    return {
+      isOnlyEmojis: only,
+      emojiCount: only ? (msg.text.match(countEmojiRegex) || []).length : 0,
+    };
+  }, [msg.text]);
+
+  console.log("Emoji Count: ", emojiCount);
+
   return (
     <div
       className={`flex flex-col ${
@@ -34,10 +65,16 @@ export default function Message({ msg, self }) {
       } relative mb-4`}
     >
       <div
-        className={`px-4 py-3 rounded-2xl shadow-md max-w-xs ${
+        className={`${
+          emojiCount === 1 ? "p-0" : "px-4 py-3 shadow-md"
+        } rounded-2xl max-w-xs ${
           self
-            ? "dark:bg-[#285BAF] bg-blue-500 text-white rounded-br-none" //285BAF
-            : "dark:bg-[#36517d] bg-[#c5dbffd9]  text-black dark:text-white rounded-bl-none" //36517d  2e4d80 467dac
+            ? `${
+                emojiCount === 1 ? "" : "dark:bg-[#285BAF] bg-blue-500"
+              } text-white rounded-br-none` //285BAF
+            : `${
+                emojiCount === 1 ? "" : "dark:bg-[#36517d] bg-[#c5dbffd9]"
+              }  text-black dark:text-white rounded-bl-none` //36517d  2e4d80 467dac
         }`}
         style={{
           // boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)",
@@ -53,7 +90,20 @@ export default function Message({ msg, self }) {
           </div>
         )}
         {/* Message Text */}
-        <div className="text-sm break-words">{msg.text}</div>
+        {/* <div className="text-sm break-words">{msg.text}</div> */}
+        <div
+          className={`break-words ${
+            isOnlyEmojis
+              ? emojiCount === 1
+                ? "text-7xl leading-none pb-[1px]"
+                : emojiCount <= 6
+                ? "text-3xl leading-tight"
+                : "text-base"
+              : "text-base"
+          }`}
+        >
+          {msg.text}
+        </div>
         {/* Timestamp */}
         {/* {msg.time && (
           <div
@@ -76,4 +126,6 @@ export default function Message({ msg, self }) {
       )}
     </div>
   );
-}
+});
+
+export default Message;

@@ -313,7 +313,7 @@ export default function ChatRoom({
   }, [isAtBottom]);
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div className="flex flex-col h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
       {/* Header */}
       {/* dark:bg-gradient-to-r dark:from-[#2C3E50] dark:via-[#34495E] dark:to-[#5D6D7E]
       dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
