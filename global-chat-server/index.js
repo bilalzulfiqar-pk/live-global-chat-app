@@ -124,6 +124,12 @@ io.on("connection", (socket) => {
   socket.on("change-username", ({ clientId, oldName, newName }) => {
     // 1️⃣ Update the master clientMap
     const finalName = getUniqueUsername(newName);
+
+    if (finalName === newName && finalName === oldName) {
+      // No change needed
+      return;
+    }
+
     clientMap.set(clientId, finalName);
 
     // 2️⃣ Propagate to all open sockets/tabs for that client
@@ -143,7 +149,12 @@ io.on("connection", (socket) => {
 
     socket.isRenaming = true;
 
+    // if (oldName !== finalName) {
+    //   io.emit("username-changed", { clientId, oldName, newName: finalName });
+    // }
+
     io.emit("username-changed", { clientId, oldName, newName: finalName });
+
     io.emit("active-users", Array.from(new Set(users.values())));
 
     // 4️⃣ let the renaming client know their assigned name

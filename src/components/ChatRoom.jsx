@@ -33,7 +33,6 @@ export default function ChatRoom({
   const requestedNameRef = useRef(username);
   const clientIdRef = useRef(null);
 
-
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
     if (!clientId) {
@@ -43,7 +42,6 @@ export default function ChatRoom({
 
     requestedNameRef.current = username;
     clientIdRef.current = clientId;
-
 
     if (!socket.connected) {
       socket.connect();
@@ -89,13 +87,26 @@ export default function ChatRoom({
 
     socket.on("username-changed", ({ clientId, oldName, newName }) => {
       // 1) push a System message
-      setMessages(prev => [
-        ...prev,
-        { id: Date.now(),
-          user: "System",
-          text: `${oldName} changed name to ${newName}` }
-      ]);
-    
+      if (oldName !== newName) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            user: "System",
+            text: `${oldName} changed name to ${newName}`,
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            user: "System",
+            text: `${oldName} tried to change name and joined again as ${newName}`,
+          },
+        ]);
+      }
+
       // 2) if it’s you, update your tab’s username + localStorage
       if (clientId === clientIdRef.current) {
         setUsername(newName);
@@ -216,7 +227,7 @@ export default function ChatRoom({
           hour: "2-digit",
           minute: "2-digit",
         }),
-        clientId: clientIdRef.current, 
+        clientId: clientIdRef.current,
       };
 
       socket.emit("send-message", message);
