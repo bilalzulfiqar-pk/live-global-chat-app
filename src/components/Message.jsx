@@ -67,7 +67,7 @@ const Message = React.memo(function Message({ msg, self }) {
       <div
         className={`${
           emojiCount === 1 ? "p-0" : "px-4 py-3 shadow-md"
-        } rounded-2xl max-w-xs ${
+        } rounded-2xl max-w-[85vw] min-[400px]:max-w-xs min-[890px]:max-w-sm lg:max-w-md ${
           self
             ? `${
                 emojiCount === 1 ? "" : "dark:bg-[#285BAF] bg-blue-500"
@@ -95,9 +95,9 @@ const Message = React.memo(function Message({ msg, self }) {
           className={`break-words ${
             isOnlyEmojis
               ? emojiCount === 1
-                ? "text-7xl leading-none pb-[1px]"
+                ? "text-7xl leading-[1.1] pb-[1px]"
                 : emojiCount <= 6
-                ? "text-3xl leading-tight"
+                ? "text-3xl leading-[1.1]"
                 : "text-base"
               : "text-base"
           }`}
