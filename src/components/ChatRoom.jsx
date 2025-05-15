@@ -323,9 +323,9 @@ export default function ChatRoom({
        */}
       <header
         className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4
-    bg-gradient-to-l from-blue-400 via-blue-500 sm:to-blue-600 to-[#2b6dfc]
-    dark:bg-gradient-to-r dark:from-[#3B4D64] sm:dark:via-[#2D3748] dark:via-[#3e4c62]  dark:to-[#4A5568]
-    text-white shadow-md"
+        bg-gradient-to-l from-blue-400 via-blue-500 sm:to-blue-600 to-[#2b6dfc]
+        dark:bg-gradient-to-r dark:from-[#3B4D64] sm:dark:via-[#2D3748] dark:via-[#3e4c62]  dark:to-[#4A5568]
+      text-white shadow-md"
       >
         <div className="font-medium text-sm sm:text-base order-1 sm:order-1 flex items-center gap-2">
           <FaUser className="text-lg dark:text-white" />{" "}

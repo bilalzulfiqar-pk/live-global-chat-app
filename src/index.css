@@ -8,6 +8,38 @@
   }
 }
 
+.emoji-picker {
+  max-width: 95vw !important;
+  max-height: 80vh !important;
+  overflow: auto !important;
+}
+
+/* .emoji-picker__container {
+  justify-content: start !important;
+} */
+
+.emoji-picker__container {
+  /* 1) never exceed 95% of viewport, but fill parent otherwise */
+  width: 100% !important;
+  max-width: 95vw !important;
+  margin: 0 auto !important;
+
+  /* 2) switch to flexible 1fr columns */
+  display: grid !important;
+  grid-template-columns: repeat(var(--emoji-per-row), 1fr) !important;
+  gap: calc(var(--emoji-size) * 0.2) !important; /* adjust gutter if needed */
+}
+
+/* make each emoji cell square and scale to fill its grid‐cell: */
+.emoji-picker__emoji {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  font-size: var(--emoji-size) !important; /* size your emoji font or icon */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 /* in your CSS */
 body {
   font-family: "Poppins", sans-serif;
