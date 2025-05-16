@@ -32,6 +32,7 @@ export default function ChatRoom({
   const [isAtBottom, setIsAtBottom] = useState(null);
   const requestedNameRef = useRef(username);
   const clientIdRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
@@ -191,10 +192,49 @@ export default function ChatRoom({
       autoFocusSearch: false,
     });
 
+    let timeoutId; // Declare here so cleanup can access it
+
     // when an emoji is clicked...
     picker.on("emoji", (selection) => {
       setInput((prev) => prev + selection.emoji);
+
+      if (timeoutId) clearTimeout(timeoutId); // Cancel previous timeout
+      timeoutId = setTimeout(() => {
+        const inputEl = inputRef.current;
+        if (inputEl) {
+          inputEl.focus();
+          const length = inputEl.value.length;
+          inputEl.setSelectionRange(length, length); // Move cursor to end
+
+          // Scroll the input so the cursor is visible at the end
+          inputEl.scrollLeft = inputEl.scrollWidth;
+        }
+      }, 10);
     });
+
+    //     const debounce = (fn, delay) => {
+    //   let id;
+    //   return (...args) => {
+    //     clearTimeout(id);
+    //     id = setTimeout(() => fn(...args), delay);
+    //   };
+    // };
+
+    // const handleEmoji = debounce((emoji) => {
+    //   setInput((prev) => prev + emoji);
+    //   const inputEl = inputRef.current;
+    //   if (inputEl) {
+    //     inputEl.focus();
+    //     inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+
+    // // Scroll the input so the cursor is visible at the end
+    // inputEl.scrollLeft = inputEl.scrollWidth;
+    //   }
+    // }, 50);
+
+    // picker.on("emoji", (selection) => {
+    //   handleEmoji(selection.emoji);
+    // });
 
     // save the instance and wire up your button
     emojiButtonRef.current = picker;
@@ -204,6 +244,7 @@ export default function ChatRoom({
     // cleanup on unmount
     return () => {
       picker.destroyPicker();
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -460,6 +501,7 @@ export default function ChatRoom({
             value={input}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            ref={inputRef}
             placeholder="Type your message..."
             className="flex-1 min-w-20 py-2 rounded-lg bg-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none"
             autoComplete="off" // disables browser history suggestions

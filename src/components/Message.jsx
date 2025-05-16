@@ -56,7 +56,7 @@ const Message = React.memo(function Message({ msg, self }) {
     };
   }, [msg.text]);
 
-  console.log("Emoji Count: ", emojiCount);
+  // console.log("Emoji Count: ", emojiCount);
 
   return (
     <div
