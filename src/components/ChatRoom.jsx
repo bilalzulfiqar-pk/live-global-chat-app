@@ -207,7 +207,9 @@ export default function ChatRoom({
           inputEl.setSelectionRange(length, length); // Move cursor to end
 
           // Scroll the input so the cursor is visible at the end
-          inputEl.scrollLeft = inputEl.scrollWidth;
+
+          // inputEl.scrollLeft = inputEl.scrollWidth;
+          inputEl.scrollTop = inputEl.scrollHeight;
         }
       }, 10);
     });
@@ -274,10 +276,21 @@ export default function ChatRoom({
       socket.emit("send-message", message);
       setInput("");
       socket.emit("stop-typing");
+
+      const t = inputRef.current;
+      if (t) {
+        t.style.height = "auto";
+      }
     }
   };
 
   const handleInputChange = (e) => {
+    const t = inputRef.current;
+    if (t) {
+      t.style.height = "auto";
+      t.style.height = t.scrollHeight + "px";
+    }
+
     setInput(e.target.value);
 
     if (e.target.value.trim()) {
@@ -487,17 +500,17 @@ export default function ChatRoom({
 
       {/* Input Area */}
       <div className="flex items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gap-2">
-        <div className="flex items-center w-full bg-gray-100 dark:bg-gray-700 rounded-full">
-          <div className="relative">
+        <div className="flex items-center w-full bg-gray-100 dark:bg-gray-700 rounded-3xl h-full">
+          <div className="relative h-full">
             <button
               ref={emojiTriggerRef}
               type="button"
-              className="cursor-pointer py-2 text-[#555E63] hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-xl flex justify-center items-center rounded-full w-[44px]  duration-300 transition"
+              className="cursor-pointer py-2 h-full text-[#555E63] hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-xl flex justify-center items-center rounded-3xl w-[44px]  duration-300 transition"
             >
               <Smile />
             </button>
           </div>
-          <input
+          {/* <input
             value={input}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -508,10 +521,44 @@ export default function ChatRoom({
             autoCorrect="off" // iOS autocorrect
             autoCapitalize="off" // iOS auto‐capitalize
             spellCheck="false" // no red underlines
-          />
+          /> */}
+          <div className="flex-1 flex items-center justify-center py-2 h-fit min-w-20">
+            <textarea
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              ref={inputRef} // <-- or keep using inputRef if you rename it
+              rows={1}
+              placeholder="Type your message..."
+              className="
+              inputarea
+              w-full
+              min-w-20
+              py-0
+              bg-transparent
+            text-gray-800 dark:text-gray-100
+            placeholder-gray-400 dark:placeholder-gray-500
+              transition focus:outline-none
+              resize-none
+              overflow-y-auto
+              h-auto
+              max-h-[calc(1.5rem*1.5*5)]
+              "
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+            />
+          </div>
+
           <button
             onClick={handleSend}
-            className="px-4 py-2.5 rounded-full text-[#555E63] hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
+            className="px-4 py-2.5 h-full rounded-3xl text-[#555E63] hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
           >
             <Send className="w-6 h-6" />
           </button>
