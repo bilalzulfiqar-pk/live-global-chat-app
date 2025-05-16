@@ -100,10 +100,10 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 3665af */
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #4179d3; 
+  background: #285BAF; 
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #3665af;
+  background: #204A91;
   cursor: pointer;
 }

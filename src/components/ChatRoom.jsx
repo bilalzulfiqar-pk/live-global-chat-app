@@ -420,38 +420,42 @@ export default function ChatRoom({
       </header>
 
       {/* Messages */}
-      <div className="flex-1 px-4 py-3 overflow-y-auto space-y-3 relative">
-        {messages.map((msg) => (
-          <motion.div
-            key={msg.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+      <div className="flex-1 relative min-h-0">
+        <div className="h-full overflow-y-auto px-4 py-3 space-y-3 relative">
+          {messages.map((msg) => (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Message msg={msg} self={msg.clientId === clientIdRef.current} />
+            </motion.div>
+          ))}
+          <div
+            className={`${
+              typingUser ? "h-5" : "h-0.5"
+            } transition-all duration-400`}
           >
-            <Message msg={msg} self={msg.clientId === clientIdRef.current} />
-          </motion.div>
-        ))}
-        <div
-          className={`${
-            typingUser ? "h-5" : "h-0.5"
-          } transition-all duration-400`}
-        >
-          <AnimatePresence>
-            {typingUser && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-sm text-gray-500 dark:text-gray-400 italic"
-              >
-                {typingUser} is typing...
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        <div ref={chatEndRef} />
+            <AnimatePresence>
+              {typingUser && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-sm text-gray-500 dark:text-gray-400 italic"
+                >
+                  {typingUser} is typing...
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Scroll to bottom button */}
         <AnimatePresence>
           {newMessages && !isAtBottom && (
             <motion.div
@@ -462,9 +466,9 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="fixed bottom-24 right-6 bg-blue-600 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-700 transition duration-300 cursor-pointer"
+              className="absolute bottom-[27px] right-6 bg-blue-600 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-700 transition duration-300 cursor-pointer"
             >
-              New messages below
+              New Messages
             </motion.div>
           )}
 
@@ -477,7 +481,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="fixed cursor-pointer bottom-24 right-6 dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-600 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
+              className="absolute cursor-pointer bottom-[27px] right-6 dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-600 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
