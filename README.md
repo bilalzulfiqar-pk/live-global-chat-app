@@ -55,9 +55,10 @@ https://live-global-chat-app.vercel.app/
 ## Running Locally
 
 ### 1. Start the Backend Server  
-In the project root, run:
+Navigate to the backend folder and run the server:
 ```bash
-node server.js
+cd global-chat-server
+npm run dev
 ```  
 _The server runs on port `5000` by default._
 
