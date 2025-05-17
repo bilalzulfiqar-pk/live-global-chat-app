@@ -92,14 +92,19 @@ io.on("connection", (socket) => {
     if (clientMap.has(clientId)) {
       const previousName = clientMap.get(clientId);
 
-      // Only reassign if name is still unused
-      const isNameTaken = Array.from(users.values()).includes(previousName);
+      let isTakenByOtherClient = false;
+      for (const [otherClientId, name] of clientMap.entries()) {
+        if (otherClientId !== clientId && name === previousName) {
+          isTakenByOtherClient = true;
+          break;
+        }
+      }
 
-      if (!isNameTaken) {
+      if (!isTakenByOtherClient) {
         finalName = previousName;
       } else {
-        finalName = getUniqueUsername(previousName); // fall back to Bilal-1 etc
-        clientMap.set(clientId, finalName); // update to new name
+        finalName = getUniqueUsername(previousName);
+        clientMap.set(clientId, finalName);
       }
     } else {
       finalName = getUniqueUsername(desiredName);
@@ -136,6 +141,11 @@ io.on("connection", (socket) => {
     // Dedupe so that two tabs don’t show up twice:
     const uniqueUsers = Array.from(new Set(users.values()));
     io.emit("active-users", uniqueUsers);
+
+    // console.log("Join ------------------------------"); //-
+    // console.log("Active users map:", users); //-
+    // console.log("Active clientMap:", clientMap); //-
+    // console.log("Active clientSockets:", clientSockets); //-
   });
 
   socket.on("change-username", ({ clientId, oldName, newName }) => {
@@ -176,6 +186,11 @@ io.on("connection", (socket) => {
 
     // 4️⃣ let the renaming client know their assigned name
     // socket.emit("username-assigned", finalName);
+
+    // console.log("Change username ------------------------------"); //-
+    // console.log("Active users map:", users); //-
+    // console.log("Active clientMap:", clientMap); //-
+    // console.log("Active clientSockets:", clientSockets); //-
   });
 
   socket.on("typing", () => {
@@ -203,15 +218,21 @@ io.on("connection", (socket) => {
       set.delete(socket.id);
       users.delete(socket.id);
 
-      // console.log("Size:", set.size);  //-
+      // console.log("Size:", set.size); //-
 
       // 4️⃣ Only announce if that was the *last* tab
       if (set.size === 0) {
         clientSockets.delete(clientId);
+        clientMap.delete(clientId);
         io.emit("user-left", `${socket.username} left the chat`);
       }
 
       io.emit("active-users", Array.from(new Set(users.values())));
+
+      // console.log("Disconnect ------------------------------"); //-
+      // console.log("Active users map:", users); //-
+      // console.log("Active clientMap:", clientMap); //-
+      // console.log("Active clientSockets:", clientSockets); //-
     }
 
     // if (socket.username) {
@@ -230,6 +251,9 @@ io.on("connection", (socket) => {
  */
 function getUniqueUsername(desired) {
   const existing = Array.from(users.values());
+
+  // console.log("Existing usernames:", existing); //-
+  
   if (!existing.includes(desired)) return desired;
 
   let counter = 1;
