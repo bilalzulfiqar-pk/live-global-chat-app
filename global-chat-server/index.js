@@ -80,10 +80,27 @@ io.on("connection", (socket) => {
     let finalName;
 
     // If we’ve already seen this clientId, re-use their name:
-    if (clientMap.has(clientId)) {
-      finalName = clientMap.get(clientId);
+    // if (clientMap.has(clientId)) {
+    //   finalName = clientMap.get(clientId);
 
-      // Otherwise, pick a fresh unique name for them:
+    //   // Otherwise, pick a fresh unique name for them:
+    // } else {
+    //   finalName = getUniqueUsername(desiredName);
+    //   clientMap.set(clientId, finalName);
+    // }
+
+    if (clientMap.has(clientId)) {
+      const previousName = clientMap.get(clientId);
+
+      // Only reassign if name is still unused
+      const isNameTaken = Array.from(users.values()).includes(previousName);
+
+      if (!isNameTaken) {
+        finalName = previousName;
+      } else {
+        finalName = getUniqueUsername(previousName); // fall back to Bilal-1 etc
+        clientMap.set(clientId, finalName); // update to new name
+      }
     } else {
       finalName = getUniqueUsername(desiredName);
       clientMap.set(clientId, finalName);

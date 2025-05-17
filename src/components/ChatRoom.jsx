@@ -172,7 +172,7 @@ export default function ChatRoom({
       // socket.off("username-assigned");
       socket.off("username-assigned", handleAssigned);
       socket.off("username-changed");
-      socket.disconnect(clientId);
+      socket.disconnect();
     };
   }, []);
 
