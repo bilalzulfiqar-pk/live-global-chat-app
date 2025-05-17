@@ -358,11 +358,21 @@ export default function ChatRoom({
     // console.log("latestMessage", latestMessage);
     // console.log(latestMessage.user);
     // console.log("isSelf", isSelf);
-    if (isAtBottom || isSelf || isSystem) {
+
+    // if (isAtBottom || isSelf || isSystem) {
+    //   setNewMessages(false);
+    // } else {
+    //   setNewMessages(true);
+    // }
+
+    if (isAtBottom) {
       setNewMessages(false);
     } else {
-      setNewMessages(true);
+      if (!isSelf && !isSystem) {
+        setNewMessages(true);
+      }
     }
+
     // console.log("isAtBottom", isAtBottom);
     // console.log("newMessages", newMessages);
   }, [messages]);
@@ -466,7 +476,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="absolute bottom-[27px] right-6 bg-blue-600 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-700 transition duration-300 cursor-pointer"
+              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-600 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-700 transition duration-300 cursor-pointer"
             >
               New Messages
             </motion.div>
@@ -481,7 +491,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="absolute cursor-pointer bottom-[27px] right-6 dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-600 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
+              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-600 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
