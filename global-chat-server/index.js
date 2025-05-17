@@ -250,11 +250,15 @@ io.on("connection", (socket) => {
  * otherwise append “-1”, “-2”, … until it’s unique.
  */
 function getUniqueUsername(desired) {
-  const existing = Array.from(users.values());
+  // // For Case Sensitive
+  // const existing = Array.from(users.values());
+  // // console.log("Existing usernames:", existing); //-
+  // if (!existing.includes(desired)) return desired;
 
-  // console.log("Existing usernames:", existing); //-
-  
-  if (!existing.includes(desired)) return desired;
+  // For Case Insensitive
+  const normalizedDesired = desired.toLowerCase();
+  const existing = Array.from(users.values()).map((name) => name.toLowerCase());
+  if (!existing.includes(normalizedDesired)) return desired;
 
   let counter = 1;
   let candidate = `${desired}-${counter}`;
