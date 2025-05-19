@@ -33,6 +33,7 @@ export default function ChatRoom({
   const requestedNameRef = useRef(username);
   const clientIdRef = useRef(null);
   const inputRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
@@ -241,10 +242,15 @@ export default function ChatRoom({
     // save the instance and wire up your button
     emojiButtonRef.current = picker;
     const btn = emojiTriggerRef.current;
-    btn.addEventListener("click", () => picker.togglePicker(btn));
+
+    // btn.addEventListener("click", () => picker.togglePicker(btn));
+
+    const handleClick = () => picker.togglePicker(btn);
+    btn.addEventListener("click", handleClick);
 
     // cleanup on unmount
     return () => {
+      btn.removeEventListener("click", handleClick);
       picker.destroyPicker();
       clearTimeout(timeoutId);
     };
@@ -285,19 +291,31 @@ export default function ChatRoom({
   };
 
   const handleInputChange = (e) => {
+    const value = e.target.value;
+
     const t = inputRef.current;
     if (t) {
       t.style.height = "auto";
       t.style.height = t.scrollHeight + "px";
     }
 
-    setInput(e.target.value);
+    setInput(value);
 
-    if (e.target.value.trim()) {
-      socket.emit("typing");
-    } else {
-      socket.emit("stop-typing");
+    const hasText = value.trim().length > 0;
+
+    if (hasText && !isTyping) {
+      socket.emit("typing"); // only emit once when typing starts
+      setIsTyping(true);
+    } else if (!hasText && isTyping) {
+      socket.emit("stop-typing"); // only emit once when typing stops
+      setIsTyping(false);
     }
+
+    // if (e.target.value.trim()) {
+    //   socket.emit("typing");
+    // } else {
+    //   socket.emit("stop-typing");
+    // }
   };
 
   const handleScrollToBottom = () => {
