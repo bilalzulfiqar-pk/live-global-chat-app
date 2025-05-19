@@ -36,6 +36,11 @@ export default function ChatRoom({
   const clientIdRef = useRef(null);
   const inputRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
+  const typingUsersRef = useRef([]);
+
+  // useEffect(() => {
+  //   console.log(messages.length);
+  // }, [messages]);
 
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
@@ -135,23 +140,35 @@ export default function ChatRoom({
         }
       );
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...msg,
-          time: localTime,
-          // time:
-          //   msg.time ||
-          //   new Date().toLocaleTimeString([], {
-          //     hour: "2-digit",
-          //     minute: "2-digit",
-          //   }),
-        },
-      ]);
-      if (msg.user !== username) {
-        messageSound.current
-          .play()
-          .catch((e) => console.warn("Autoplay blocked", e));
+      if (typingUsersRef.current.length > 1) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...msg,
+            time: localTime,
+          },
+        ]);
+        if (msg.user !== username) {
+          messageSound.current
+            .play()
+            .catch((e) => console.warn("Autoplay blocked", e));
+        }
+      } else {
+        // Delay to improve user experience for typing animation for single typing user
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              ...msg,
+              time: localTime,
+            },
+          ]);
+          if (msg.user !== username) {
+            messageSound.current
+              .play()
+              .catch((e) => console.warn("Autoplay blocked", e));
+          }
+        }, 200);
       }
     });
 
@@ -172,7 +189,10 @@ export default function ChatRoom({
 
     socket.on("update-typing-users", (usersArray) => {
       // Filter out yourself so you don't see your own name
-      setTypingUsers(usersArray.filter((u) => u !== username));
+      const filtered = usersArray.filter((u) => u !== username);
+      setTypingUsers(filtered);
+      // Right away mirror into the ref:
+      typingUsersRef.current = filtered;
     });
 
     socket.on("active-users", (users) => {
@@ -498,6 +518,10 @@ export default function ChatRoom({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
+              // transition={{
+              //   duration: 0.3,
+              //   ...(typingUsersRef.current.length > 1 ? { delay: 0.3 } : {}),
+              // }}
             >
               <Message msg={msg} self={msg.clientId === clientIdRef.current} />
             </motion.div>
@@ -506,11 +530,12 @@ export default function ChatRoom({
             <AnimatePresence mode="wait">
               {typingUsers.length > 0 && (
                 <motion.div
+                  // layout
                   key={typingUsers[currentIdx]}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.2 }}
                   className="text-sm text-gray-500 dark:text-gray-400 italic"
                 >
                   {typingUsers[currentIdx]} is typing...
