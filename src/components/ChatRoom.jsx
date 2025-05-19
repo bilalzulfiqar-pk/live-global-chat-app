@@ -126,16 +126,26 @@ export default function ChatRoom({
     });
 
     socket.on("receive-message", (msg) => {
+      const localTime = new Date(msg.time || new Date()).toLocaleTimeString(
+        [],
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          // hour12: true, //  12-hour format or 24-hour format (without it means system default)
+        }
+      );
+
       setMessages((prev) => [
         ...prev,
         {
           ...msg,
-          time:
-            msg.time ||
-            new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+          time: localTime,
+          // time:
+          //   msg.time ||
+          //   new Date().toLocaleTimeString([], {
+          //     hour: "2-digit",
+          //     minute: "2-digit",
+          //   }),
         },
       ]);
       if (msg.user !== username) {
@@ -302,10 +312,11 @@ export default function ChatRoom({
         user: username,
         text: input.trim(),
         id: Date.now(),
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        // time: new Date().toLocaleTimeString([], {
+        //   hour: "2-digit",
+        //   minute: "2-digit",
+        // }),
+        time: new Date().toISOString(),
         clientId: clientIdRef.current,
       };
 
@@ -491,9 +502,7 @@ export default function ChatRoom({
               <Message msg={msg} self={msg.clientId === clientIdRef.current} />
             </motion.div>
           ))}
-          <div
-            className={`h-5 mb-0`}
-          >
+          <div className={`h-5 mb-0`}>
             <AnimatePresence mode="wait">
               {typingUsers.length > 0 && (
                 <motion.div
