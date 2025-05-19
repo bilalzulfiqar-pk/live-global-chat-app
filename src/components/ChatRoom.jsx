@@ -492,9 +492,7 @@ export default function ChatRoom({
             </motion.div>
           ))}
           <div
-            className={`${
-              typingUsers.length > 0 ? "h-5" : "h-0.5"
-            } transition-all duration-400`}
+            className={`h-5 mb-0`}
           >
             <AnimatePresence mode="wait">
               {typingUsers.length > 0 && (
