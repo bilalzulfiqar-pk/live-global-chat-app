@@ -9,6 +9,7 @@ const server = http.createServer(app);
 const users = new Map(); // socket.id => username
 const clientMap = new Map(); // clientId ⇒ username
 const clientSockets = new Map(); // clientId ⇒ Set of socket.ids
+const typingUsers = new Set(); // Set to track who is typing
 
 // // Sample fake names (you can add more if needed) for testing
 // const fakeNames = [
@@ -194,11 +195,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", () => {
-    socket.broadcast.emit("user-typing", socket.username);
+    // socket.broadcast.emit("user-typing", socket.username);
+    typingUsers.add(socket.username);
+    io.emit("update-typing-users", [...typingUsers]);
   });
 
   socket.on("stop-typing", () => {
-    socket.broadcast.emit("user-stop-typing", socket.username);
+    // socket.broadcast.emit("user-stop-typing", socket.username);
+    typingUsers.delete(socket.username);
+    io.emit("update-typing-users", [...typingUsers]);
   });
 
   socket.on("send-message", (message) => {
@@ -209,6 +214,9 @@ io.on("connection", (socket) => {
     // console.log("🔌 A user disconnected ");
     // console.log("Disconnected socket id:", socket.id);
     // console.log("Disconnected username:", socket.username);  //-
+
+    typingUsers.delete(socket.username);
+    io.emit("update-typing-users", [...typingUsers]);
 
     const clientId = socket.clientId;
     const set = clientSockets.get(clientId);

@@ -17,7 +17,9 @@ export default function ChatRoom({
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [typingUser, setTypingUser] = useState("");
+  // const [typingUser, setTypingUser] = useState("");
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const chatEndRef = useRef(null);
   // const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -150,12 +152,17 @@ export default function ChatRoom({
       ]);
     });
 
-    socket.on("user-typing", (user) => {
-      setTypingUser(user);
-    });
+    // socket.on("user-typing", (user) => {
+    //   setTypingUser(user);
+    // });
 
-    socket.on("user-stop-typing", () => {
-      setTypingUser("");
+    // socket.on("user-stop-typing", () => {
+    //   setTypingUser("");
+    // });
+
+    socket.on("update-typing-users", (usersArray) => {
+      // Filter out yourself so you don't see your own name
+      setTypingUsers(usersArray.filter((u) => u !== username));
     });
 
     socket.on("active-users", (users) => {
@@ -167,8 +174,9 @@ export default function ChatRoom({
       socket.off("user-joined");
       socket.off("receive-message");
       socket.off("user-left");
-      socket.off("user-typing");
-      socket.off("user-stop-typing");
+      // socket.off("user-typing");
+      // socket.off("user-stop-typing");
+      socket.off("update-typing-users");
       socket.off("active-users");
       // socket.off("username-assigned");
       socket.off("username-assigned", handleAssigned);
@@ -266,6 +274,28 @@ export default function ChatRoom({
     return () => window.removeEventListener("themeChange", handle);
   }, []);
 
+  useEffect(() => {
+    if (typingUsers.length === 0) {
+      setCurrentIdx(0);
+      return; // nothing to cycle
+    }
+
+    // When typingUsers changes, ensure currentIdx is valid
+    if (currentIdx >= typingUsers.length) {
+      setCurrentIdx(0);
+    }
+
+    // Cycle every 2 seconds (adjust as you like)
+    const id = setInterval(() => {
+      setCurrentIdx((prev) => {
+        // move to next index, wrap around
+        return (prev + 1) % typingUsers.length;
+      });
+    }, 2500);
+
+    return () => clearInterval(id);
+  }, [typingUsers]);
+
   const handleSend = () => {
     if (input.trim()) {
       const message = {
@@ -281,6 +311,7 @@ export default function ChatRoom({
 
       socket.emit("send-message", message);
       setInput("");
+      setIsTyping(false);
       socket.emit("stop-typing");
 
       const t = inputRef.current;
@@ -361,7 +392,7 @@ export default function ChatRoom({
 
     // console.log("typingUser", typingUser);
     // console.log("isAtBottom", isAtBottom);
-  }, [messages, typingUser]);
+  }, [messages]);
 
   useEffect(() => {
     // if (messages.length === 0) return;
@@ -449,7 +480,7 @@ export default function ChatRoom({
 
       {/* Messages */}
       <div className="flex-1 relative min-h-0">
-        <div className="h-full overflow-y-auto px-4 py-3 space-y-3 relative">
+        <div className="h-full overflow-y-auto px-4 py-3 space-y-3 relative scroll-smooth">
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
@@ -462,19 +493,20 @@ export default function ChatRoom({
           ))}
           <div
             className={`${
-              typingUser ? "h-5" : "h-0.5"
+              typingUsers.length > 0 ? "h-5" : "h-0.5"
             } transition-all duration-400`}
           >
-            <AnimatePresence>
-              {typingUser && (
+            <AnimatePresence mode="wait">
+              {typingUsers.length > 0 && (
                 <motion.div
+                  key={typingUsers[currentIdx]}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.3 }}
                   className="text-sm text-gray-500 dark:text-gray-400 italic"
                 >
-                  {typingUser} is typing...
+                  {typingUsers[currentIdx]} is typing...
                 </motion.div>
               )}
             </AnimatePresence>
