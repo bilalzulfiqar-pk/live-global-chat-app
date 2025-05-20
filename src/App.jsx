@@ -4,9 +4,15 @@ import JoinScreen from "./components/JoinScreen";
 import ChatRoom from "./components/ChatRoom";
 import { Toaster } from "react-hot-toast";
 // import { v4 as uuidv4 } from "uuid";
+import { AnimatePresence, motion } from "framer-motion";
 
 function App() {
   const [username, setUsername] = useState(null);
+
+  // Initialize directly from localStorage to prevent flicker:
+  // const [username, setUsername] = useState(() => {
+  //   return localStorage.getItem("chatapp-username") || "";
+  // });
 
   useEffect(() => {
     // let clientId = localStorage.getItem("chatapp-ClientId");
@@ -43,15 +49,35 @@ function App() {
   return (
     <>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
-      {username ? (
-        <ChatRoom
-          username={username}
-          handleChangeUsername={handleChangeUsername}
-          setUsername={setUsername}
-        />
-      ) : (
-        <JoinScreen onJoin={handleJoin} />
-      )}
+      <div className="bg-white dark:bg-gray-900 transition-colors duration-300">
+        <AnimatePresence mode="wait">
+          {username ? (
+            <motion.div
+              key="chat"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <ChatRoom
+                username={username}
+                handleChangeUsername={handleChangeUsername}
+                setUsername={setUsername}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="join"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <JoinScreen onJoin={handleJoin} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </>
   );
 }

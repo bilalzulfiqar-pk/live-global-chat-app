@@ -4,13 +4,13 @@ import ThemeToggle from "./ThemeToggle";
 
 export default function JoinScreen({ onJoin }) {
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleJoin = () => {
     if (username.trim()) {
       setError("");
-      setLoading(true);
+      // setLoading(true);
       onJoin(username.trim());
     } else {
       setError("Name cannot be empty");
@@ -49,16 +49,33 @@ export default function JoinScreen({ onJoin }) {
 
         {/* {error && <div className="text-sm text-red-500 -mt-2">{error}</div>} */}
 
-        <button
-          onClick={handleJoin}
-          disabled={loading}
-          className={`w-full px-4 py-2 cursor-pointer rounded-lg text-white shadow-lg transition duration-300 ${
+        {/* ${
             loading
               ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600"
               : "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 hover:bg-gradient-to-r hover:from-blue-700 hover:via-blue-800 hover:to-indigo-700"
-          } focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50`}
+          }  */}
+
+        <button
+          onClick={handleJoin}
+          // disabled={loading}
+          className={`w-full px-4 py-2 cursor-pointer rounded-lg text-white shadow-lg transition duration-300 
+          bg-gradient-to-l 
+          from-blue-500/90
+          to-blue-600/90
+          hover:from-blue-500
+          hover:to-blue-700
+            hover:shadow-xl
+            hover:shadow-blue-500/50
+          dark:from-blue-600/80
+          dark:to-blue-500/80
+          dark:hover:from-blue-600
+          dark:hover:to-blue-500
+            dark:hover:shadow-blue-500/50
+            dark:hover:shadow-lg
+          focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50`}
         >
-          {loading ? "Joining..." : "Join Chat"}
+          {/* {loading ? "Joining..." : "Join Chat"} */}
+          Connect
         </button>
 
         {error && (

@@ -9,6 +9,7 @@ import { Smile, Send } from "lucide-react";
 import { FaUser } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
+import { s } from "framer-motion/client";
 
 export default function ChatRoom({
   username,
@@ -40,6 +41,9 @@ export default function ChatRoom({
   const messageTimestampsRef = useRef([]);
   const [isLocked, setIsLocked] = useState(false);
   const [timeoutRemaining, setTimeoutRemaining] = useState(0);
+
+  const [isConnected, setIsConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
@@ -182,6 +186,34 @@ export default function ChatRoom({
       // console.log("Active users:", users);
     });
 
+    socket.on("connect", () => {
+      setIsConnected(true); // ✅ Hide loader
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false); // 🔁 Show loader again if disconnected
+    });
+
+    // Fires each time a reconnect attempt starts (with attempt number)
+    socket.io.on("reconnect_attempt", (attemptNumber) => {
+      console.log(`Reconnecting… attempt #${attemptNumber}`);
+      setIsConnected(false);
+    });
+
+    // Fires when reconnection finally succeeds
+    socket.io.on("reconnect", (attemptNumber) => {
+      console.log(`Reconnected on attempt #${attemptNumber}`);
+      setIsConnected(true);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.log(
+        "Connection error"
+        // , error
+      );
+      setIsConnected(false);
+    });
+
     return () => {
       socket.off("user-joined");
       socket.off("receive-message");
@@ -193,88 +225,78 @@ export default function ChatRoom({
       // socket.off("username-assigned");
       socket.off("username-assigned", handleAssigned);
       socket.off("username-changed");
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
+      socket.off("reconnect");
+      socket.off("reconnect_attempt");
       socket.disconnect();
     };
   }, []);
 
   useEffect(() => {
-    // create the picker once
-    // const picker = new EmojiButton({
-    //   position: "top-end", // auto-positions around the trigger
-    //   zIndex: 1000,
-    // });
+    if (loading) return; // skip if we’re still showing the loader
 
-    // read the current class on <html> and tell the picker
-    const isDark = document.documentElement.classList.contains("dark");
-    const picker = new EmojiButton({
-      position: "top-end",
-      zIndex: 1000,
-      theme: isDark ? "dark" : "light",
-      autoFocusSearch: false,
-    });
+    let timeoutId; // will hold the ID returned by setTimeout
+    let picker; // will hold the EmojiButton instance
+    let btn; // will hold emojiTriggerRef.current
+    let handleClick; // will hold our click‐handler function
 
-    let timeoutId; // Declare here so cleanup can access it
+    // delay initialization until after the exit animation finishes
+    timeoutId = setTimeout(() => {
+      // 1. create the picker
+      const isDark = document.documentElement.classList.contains("dark");
+      picker = new EmojiButton({
+        position: "top-end",
+        zIndex: 1000,
+        theme: isDark ? "dark" : "light",
+        autoFocusSearch: false,
+      });
 
-    // when an emoji is clicked...
-    picker.on("emoji", (selection) => {
-      setInput((prev) => prev + selection.emoji);
+      // 2. wire up the “emoji” event
+      let innerTimeoutId;
+      picker.on("emoji", (selection) => {
+        setInput((prev) => prev + selection.emoji);
 
-      if (timeoutId) clearTimeout(timeoutId); // Cancel previous timeout
-      timeoutId = setTimeout(() => {
-        const inputEl = inputRef.current;
-        if (inputEl) {
-          inputEl.focus();
-          const length = inputEl.value.length;
-          inputEl.setSelectionRange(length, length); // Move cursor to end
+        if (innerTimeoutId) clearTimeout(innerTimeoutId);
+        innerTimeoutId = setTimeout(() => {
+          const inputEl = inputRef.current;
+          if (inputEl) {
+            inputEl.focus();
+            const length = inputEl.value.length;
+            inputEl.setSelectionRange(length, length);
+            inputEl.scrollTop = inputEl.scrollHeight;
+          }
+        }, 10);
+      });
 
-          // Scroll the input so the cursor is visible at the end
+      // 3. store the picker in the ref (if you want to access it later)
+      emojiButtonRef.current = picker;
 
-          // inputEl.scrollLeft = inputEl.scrollWidth;
-          inputEl.scrollTop = inputEl.scrollHeight;
-        }
-      }, 10);
-    });
+      // 4. grab the actual button element
+      btn = emojiTriggerRef.current;
+      if (!btn) {
+        console.warn("Emoji button not found—picker won’t open.");
+        return;
+      }
 
-    //     const debounce = (fn, delay) => {
-    //   let id;
-    //   return (...args) => {
-    //     clearTimeout(id);
-    //     id = setTimeout(() => fn(...args), delay);
-    //   };
-    // };
+      // 5. create the click handler and attach it
+      handleClick = () => picker.togglePicker(btn);
+      btn.addEventListener("click", handleClick);
+    }, 1000); // 1s delay so that any exit animation can finish first
 
-    // const handleEmoji = debounce((emoji) => {
-    //   setInput((prev) => prev + emoji);
-    //   const inputEl = inputRef.current;
-    //   if (inputEl) {
-    //     inputEl.focus();
-    //     inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
-
-    // // Scroll the input so the cursor is visible at the end
-    // inputEl.scrollLeft = inputEl.scrollWidth;
-    //   }
-    // }, 50);
-
-    // picker.on("emoji", (selection) => {
-    //   handleEmoji(selection.emoji);
-    // });
-
-    // save the instance and wire up your button
-    emojiButtonRef.current = picker;
-    const btn = emojiTriggerRef.current;
-
-    // btn.addEventListener("click", () => picker.togglePicker(btn));
-
-    const handleClick = () => picker.togglePicker(btn);
-    btn.addEventListener("click", handleClick);
-
-    // cleanup on unmount
+    // Clean up everything when this effect re-runs or unmounts:
     return () => {
-      btn.removeEventListener("click", handleClick);
-      picker.destroyPicker();
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId); // stop the pending timeout (if not run yet)
+
+      if (btn && handleClick) {
+        btn.removeEventListener("click", handleClick);
+      }
+      if (picker) {
+        picker.destroyPicker();
+      }
     };
-  }, []);
+  }, [loading]);
 
   useEffect(() => {
     const handle = (e) => {
@@ -509,265 +531,323 @@ export default function ChatRoom({
     }
   }, [isAtBottom]);
 
+  useEffect(() => {
+    if (isConnected) {
+      const timeout = setTimeout(() => {
+        setLoading(false);
+      }, 1000); // small delay to avoid flicker
+
+      return () => clearTimeout(timeout);
+    } else {
+      setLoading(true);
+    }
+  }, [isConnected]);
+
+  // if (loading)
+  //   return (
+  //     <div className="flex justify-center items-center h-screen bg-white dark:bg-gray-900">
+  //       <div className="text-lg text-gray-700 dark:text-gray-300 animate-pulse">
+  //         Connecting...
+  //       </div>
+  //     </div>
+  //   );
+
   return (
-    <div className="flex flex-col h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
-      {/* Header */}
-      {/* dark:bg-gradient-to-r dark:from-[#2C3E50] dark:via-[#34495E] dark:to-[#5D6D7E]
-      dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
-      dark:bg-gradient-to-r dark:from-[#3E4A59] dark:via-[#2C3D49] dark:to-[#4F677C]
-      */}
-      {/* bg-gradient-to-l from-teal-400 via-blue-500 to-indigo-600  last 2b6dfc
-       */}
-      <header
-        className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4
-        bg-gradient-to-l from-blue-400 via-blue-500 sm:to-blue-600 to-[#2b6dfc]
-        dark:bg-gradient-to-r dark:from-[#3B4D64] sm:dark:via-[#2D3748] dark:via-[#3e4c62]  dark:to-[#4A5568]
-      text-white shadow-md"
-      >
-        <div className="font-medium text-sm sm:text-base order-1 sm:order-1 flex items-center gap-2">
-          <FaUser className="text-lg dark:text-white" />{" "}
-          <span className="font-semibold dark:text-white">{username}</span>
-          <button
-            onClick={handleChangeUsername}
-            className="text-xs shadow-2xs cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#171e29] py-1 rounded-xl bg-blue-400 hover:bg-blue-500 transition-colors duration-300"
-          >
-            Change
-          </button>
-        </div>
-
-        {/* Active Users Count (Only the total number) */}
-        <div className="text-sm sm:text-base dark:text-white order-3 w-full sm:w-auto sm:order-2">
-          <strong>🟢 Active Users: {activeUsers.length}</strong>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="ml-2.5 text-white dark:text-gray-300 shadow-sm dark:bg-[#1E2939] dark:hover:bg-[#171e29] cursor-pointer bg-blue-400 px-2.5 pr-3 py-1.5 rounded-full hover:bg-blue-500 transition-colors duration-300 text-sm"
-          >
-            View Full List
-          </button>
-        </div>
-
-        <div className="order-2 sm:order-3">
-          <ThemeToggle />
-        </div>
-      </header>
-
-      {/* Messages */}
-      <div className="flex-1 relative min-h-0">
-        <div className="h-full flex flex-col overflow-y-auto px-4 py-3 relative scroll-smooth">
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-
-              // transition={{
-              //   duration: 0.3,
-              //   ...(typingUsersRef.current.length > 1 ? { delay: 0.3 } : {}),
-              // }}
-            >
-              <Message msg={msg} self={msg.clientId === clientIdRef.current} />
-            </motion.div>
-          ))}
-          <div className={`min-h-5 mb-0 mt-auto`}>
-            <AnimatePresence mode="wait">
-              {typingUsers.length > 0 && (
-                <motion.div
-                  // layout
-                  key={typingUsers[currentIdx]}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 0.2,
-                    // layout: {
-                    //   duration: 0.05,
-                    // },
-                  }}
-                  className="text-sm text-gray-500 dark:text-gray-400 italic"
-                >
-                  {typingUsers[currentIdx]} is typing...
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div ref={chatEndRef} />
-        </div>
-
-        {/* Scroll to bottom button */}
-        <AnimatePresence>
-          {newMessages && !isAtBottom && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={() =>
-                chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer"
-            >
-              New Messages
-            </motion.div>
-          )}
-
-          {!newMessages && showScrollButton && !isAtBottom && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={() =>
-                chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="translate-y-[1px]"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Input Area */}
-      <div className="flex flex-col items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-l from-blue-400 to-blue-500 dark:from-none dark:to-none dark:bg-none dark:bg-gray-800 gap-2 relative">
-        <div className="flex items-center w-full bg-white dark:bg-gray-700 rounded-3xl shadow h-full relative">
-          <AnimatePresence>
-            {isLocked && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-red-500 absolute inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center"
-              >
-                You're sending messages too fast. Please wait {timeoutRemaining}
-                s.
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="h-full">
-            <button
-              disabled={isLocked}
-              ref={emojiTriggerRef}
-              type="button"
-              className="cursor-pointer py-2 h-full text-[#555E63] hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-xl flex justify-center items-center rounded-3xl w-[44px]  duration-300 transition"
-            >
-              <Smile />
-            </button>
-          </div>
-          {/* <input
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            ref={inputRef}
-            placeholder="Type your message..."
-            className="flex-1 min-w-20 py-2 rounded-lg bg-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none"
-            autoComplete="off" // disables browser history suggestions
-            autoCorrect="off" // iOS autocorrect
-            autoCapitalize="off" // iOS auto‐capitalize
-            spellCheck="false" // no red underlines
-          /> */}
-          <div className="flex-1 flex items-center justify-center py-2 h-fit min-w-20">
-            <textarea
-              disabled={isLocked}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              ref={inputRef} // <-- or keep using inputRef if you rename it
-              rows={1}
-              placeholder="Type your message..."
-              className="
-              inputarea
-              w-full
-              min-w-20
-              py-0
-              bg-transparent
-            text-gray-800 dark:text-gray-100
-            placeholder-gray-400 dark:placeholder-gray-500
-              transition focus:outline-none
-              resize-none
-              overflow-y-auto
-              h-auto
-              max-h-[calc(1.5rem*6)]
-              " // max-h-[calc(1.5rem*6)] for 6 lines
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-            />
-          </div>
-
-          <button
-            disabled={isLocked}
-            onClick={handleSend}
-            className="px-4 py-2.5 h-full rounded-3xl text-[#555E63] hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
-          >
-            <Send className="w-6 h-6" />
-          </button>
-        </div>
-      </div>
-
-      {/* Off-Canvas Sidebar for Active Users */}
-      <AnimatePresence>
-        {sidebarOpen && (
+    <div className="h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <AnimatePresence mode="wait">
+        {loading ? (
           <motion.div
-            className="fixed inset-0 bg-gray-800/50 z-50"
-            onClick={() => setSidebarOpen(false)}
-            initial={{ opacity: 0 }} // Sidebar starts invisible
-            animate={{ opacity: 1 }} // Sidebar becomes fully visible
-            exit={{ opacity: 0 }} // Sidebar fades out on exit
-            transition={{ duration: 0.3 }}
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex justify-center items-center h-screen bg-white dark:bg-gray-900"
           >
-            <motion.div
-              className="absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg"
-              initial={{ x: "100%" }} // Initially off-screen to the right
-              animate={{ x: 0 }} // Sidebar slides in
-              exit={{ x: "100%" }} // Sidebar slides out to the right
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-xl text-blue-500 dark:text-white font-semibold mb-4">
-                🟢 Active Users
-              </h2>
-              <ul className="space-y-2">
-                {activeUsers.map((user, idx) => (
-                  <li
-                    key={idx}
-                    className="bg-blue-500 dark:bg-[#1E2939] px-4 py-2 rounded-lg text-white dark:text-white flex justify-between items-center"
-                  >
-                    <span>
-                      {idx + 1}. {user}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="absolute cursor-pointer dark:text-white top-4 right-4 text-white bg-blue-500 dark:bg-[#1E2939] dark:hover:bg-[#171e29] hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
+            <div className="text-lg text-gray-700 dark:text-gray-300 animate-pulse">
+              Connecting...
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="main"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="flex flex-col h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
+              {/* Header */}
+              {/* dark:bg-gradient-to-r dark:from-[#2C3E50] dark:via-[#34495E] dark:to-[#5D6D7E]
+              dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
+              dark:bg-gradient-to-r dark:from-[#3E4A59] dark:via-[#2C3D49] dark:to-[#4F677C]
+              */}
+              {/* bg-gradient-to-l from-teal-400 via-blue-500 to-indigo-600  last 2b6dfc
+               */}
+              <header
+                className="px-4 py-3 flex flex-wrap flex-row items-center justify-between gap-4
+              bg-gradient-to-l from-blue-400 via-blue-500 sm:to-blue-600 to-[#2b6dfc]
+              dark:bg-gradient-to-r dark:from-[#3B4D64] sm:dark:via-[#2D3748] dark:via-[#3e4c62]  dark:to-[#4A5568]
+            text-white shadow-md"
               >
-                ✕
-              </button>
-            </motion.div>
+                <div className="font-medium text-sm sm:text-base order-1 sm:order-1 flex items-center gap-2">
+                  <FaUser className="text-lg dark:text-white" />{" "}
+                  <span className="font-semibold dark:text-white">
+                    {username}
+                  </span>
+                  <button
+                    onClick={handleChangeUsername}
+                    className="text-xs shadow-2xs cursor-pointer text-white px-2 dark:text-gray-300 dark:bg-[#1E2939] dark:hover:bg-[#171e29] py-1 rounded-xl bg-blue-400 hover:bg-blue-500 transition-colors duration-300"
+                  >
+                    Change
+                  </button>
+                </div>
+
+                {/* Active Users Count (Only the total number) */}
+                <div className="text-sm sm:text-base dark:text-white order-3 w-full sm:w-auto sm:order-2">
+                  <strong>🟢 Active Users: {activeUsers.length}</strong>
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="ml-2.5 text-white dark:text-gray-300 shadow-sm dark:bg-[#1E2939] dark:hover:bg-[#171e29] cursor-pointer bg-blue-400 px-2.5 pr-3 py-1.5 rounded-full hover:bg-blue-500 transition-colors duration-300 text-sm"
+                  >
+                    View Full List
+                  </button>
+                </div>
+
+                <div className="order-2 sm:order-3">
+                  <ThemeToggle />
+                </div>
+              </header>
+
+              {/* Messages */}
+              <div className="flex-1 relative min-h-0">
+                <div className="h-full flex flex-col overflow-y-auto px-4 py-3 relative scroll-smooth">
+                  {messages.map((msg) => (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+
+                      // transition={{
+                      //   duration: 0.3,
+                      //   ...(typingUsersRef.current.length > 1 ? { delay: 0.3 } : {}),
+                      // }}
+                    >
+                      <Message
+                        msg={msg}
+                        self={msg.clientId === clientIdRef.current}
+                      />
+                    </motion.div>
+                  ))}
+                  <div className={`min-h-5 mb-0 mt-auto`}>
+                    <AnimatePresence mode="wait">
+                      {typingUsers.length > 0 && (
+                        <motion.div
+                          // layout
+                          key={typingUsers[currentIdx]}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{
+                            duration: 0.2,
+                            // layout: {
+                            //   duration: 0.05,
+                            // },
+                          }}
+                          className="text-sm text-gray-500 dark:text-gray-400 italic"
+                        >
+                          {typingUsers[currentIdx]} is typing...
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* Scroll to bottom button */}
+                <AnimatePresence>
+                  {newMessages && !isAtBottom && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      onClick={() =>
+                        chatEndRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                        })
+                      }
+                      className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer"
+                    >
+                      New Messages
+                    </motion.div>
+                  )}
+
+                  {!newMessages && showScrollButton && !isAtBottom && (
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      onClick={() =>
+                        chatEndRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                        })
+                      }
+                      className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="translate-y-[1px]"
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Input Area */}
+              <div className="flex flex-col items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-l from-blue-400 to-blue-500 dark:from-none dark:to-none dark:bg-none dark:bg-gray-800 gap-2 relative">
+                <div className="flex items-center w-full bg-white dark:bg-gray-700 rounded-3xl shadow h-full relative">
+                  <AnimatePresence>
+                    {isLocked && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-red-500 absolute inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center"
+                      >
+                        You're sending messages too fast. Please wait{" "}
+                        {timeoutRemaining}
+                        s.
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="h-full">
+                    <button
+                      disabled={isLocked}
+                      ref={emojiTriggerRef}
+                      type="button"
+                      className="cursor-pointer py-2 h-full text-[#555E63] hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-xl flex justify-center items-center rounded-3xl w-[44px]  duration-300 transition"
+                    >
+                      <Smile />
+                    </button>
+                  </div>
+                  {/* <input
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  ref={inputRef}
+                  placeholder="Type your message..."
+                  className="flex-1 min-w-20 py-2 rounded-lg bg-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition focus:outline-none"
+                  autoComplete="off" // disables browser history suggestions
+                  autoCorrect="off" // iOS autocorrect
+                  autoCapitalize="off" // iOS auto‐capitalize
+                  spellCheck="false" // no red underlines
+                  /> */}
+                  <div className="flex-1 flex items-center justify-center py-2 h-fit min-w-20">
+                    <textarea
+                      disabled={isLocked}
+                      value={input}
+                      onChange={handleInputChange}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                      ref={inputRef} // <-- or keep using inputRef if you rename it
+                      rows={1}
+                      placeholder="Type your message..."
+                      className="
+                      inputarea
+                      w-full
+                      min-w-20
+                      py-0
+                      bg-transparent
+                    text-gray-800 dark:text-gray-100
+                    placeholder-gray-400 dark:placeholder-gray-500
+                      transition focus:outline-none
+                      resize-none
+                      overflow-y-auto
+                      h-auto
+                      max-h-[calc(1.5rem*6)]
+                      " // max-h-[calc(1.5rem*6)] for 6 lines
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                    />
+                  </div>
+
+                  <button
+                    disabled={isLocked}
+                    onClick={handleSend}
+                    className="px-4 py-2.5 h-full rounded-3xl text-[#555E63] hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
+                  >
+                    <Send className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Off-Canvas Sidebar for Active Users */}
+              <AnimatePresence>
+                {sidebarOpen && (
+                  <motion.div
+                    className="fixed inset-0 bg-gray-800/50 z-50"
+                    onClick={() => setSidebarOpen(false)}
+                    initial={{ opacity: 0 }} // Sidebar starts invisible
+                    animate={{ opacity: 1 }} // Sidebar becomes fully visible
+                    exit={{ opacity: 0 }} // Sidebar fades out on exit
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      className="absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg"
+                      initial={{ x: "100%" }} // Initially off-screen to the right
+                      animate={{ x: 0 }} // Sidebar slides in
+                      exit={{ x: "100%" }} // Sidebar slides out to the right
+                      transition={{ duration: 0.2 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h2 className="text-xl text-blue-500 dark:text-white font-semibold mb-4">
+                        🟢 Active Users
+                      </h2>
+                      <ul className="space-y-2">
+                        {activeUsers.map((user, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-blue-500 dark:bg-[#1E2939] px-4 py-2 rounded-lg text-white dark:text-white flex justify-between items-center"
+                          >
+                            <span>
+                              {idx + 1}. {user}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="absolute cursor-pointer dark:text-white top-4 right-4 text-white bg-blue-500 dark:bg-[#1E2939] dark:hover:bg-[#171e29] hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
+                      >
+                        ✕
+                      </button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
