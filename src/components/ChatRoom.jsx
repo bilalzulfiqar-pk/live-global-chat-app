@@ -37,6 +37,10 @@ export default function ChatRoom({
   const inputRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
 
+  const messageTimestampsRef = useRef([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const [timeoutRemaining, setTimeoutRemaining] = useState(0);
+
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
     if (!clientId) {
@@ -328,7 +332,67 @@ export default function ChatRoom({
         t.style.height = "auto";
       }
     }
+
+    const now = Date.now();
+    const limit = 5; // max messages limit
+    const duration = 5 * 1000; // max messages limit duration in seconds
+
+    // Clean up old timestamps
+    messageTimestampsRef.current = messageTimestampsRef.current.filter(
+      (timestamp) => now - timestamp < duration
+    );
+
+    // Add new timestamp
+    messageTimestampsRef.current.push(now);
+
+    if (messageTimestampsRef.current.length > limit) {
+      // Trigger lock
+      const timeoutSeconds = 30; // Timeout seconds
+
+      setIsLocked(true);
+      setTimeoutRemaining(timeoutSeconds);
+      localStorage.setItem("chat_timeout_start", now.toString());
+
+      // Prevent message from being sent
+      return;
+    }
   };
+
+  useEffect(() => {
+    const savedStart = localStorage.getItem("chat_timeout_start");
+    if (savedStart) {
+      const now = Date.now();
+      const elapsed = Math.floor((now - parseInt(savedStart, 10)) / 1000);
+      const remaining = 30 - elapsed; // Remaining Timeout seconds
+      if (remaining > 0) {
+        setIsLocked(true);
+        setTimeoutRemaining(remaining);
+      } else {
+        localStorage.removeItem("chat_timeout_start");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let interval = null;
+
+    if (isLocked && timeoutRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeoutRemaining((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setIsLocked(false);
+            messageTimestampsRef.current = [];
+            localStorage.removeItem("chat_timeout_start");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isLocked, timeoutRemaining]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -542,7 +606,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-600 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-700 transition duration-300 cursor-pointer"
+              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer"
             >
               New Messages
             </motion.div>
@@ -557,7 +621,7 @@ export default function ChatRoom({
               onClick={() =>
                 chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
               }
-              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-600 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
+              className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -579,10 +643,26 @@ export default function ChatRoom({
       </div>
 
       {/* Input Area */}
-      <div className="flex items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gap-2">
-        <div className="flex items-center w-full bg-gray-100 dark:bg-gray-700 rounded-3xl h-full">
-          <div className="relative h-full">
+      <div className="flex flex-col items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-l from-blue-400 to-blue-500 dark:from-none dark:to-none dark:bg-none dark:bg-gray-800 gap-2 relative">
+        <div className="flex items-center w-full bg-white dark:bg-gray-700 rounded-3xl shadow h-full relative">
+          <AnimatePresence>
+            {isLocked && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-red-500 absolute inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center"
+              >
+                You're sending messages too fast. Please wait {timeoutRemaining}
+                s.
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="h-full">
             <button
+              disabled={isLocked}
               ref={emojiTriggerRef}
               type="button"
               className="cursor-pointer py-2 h-full text-[#555E63] hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-xl flex justify-center items-center rounded-3xl w-[44px]  duration-300 transition"
@@ -604,6 +684,7 @@ export default function ChatRoom({
           /> */}
           <div className="flex-1 flex items-center justify-center py-2 h-fit min-w-20">
             <textarea
+              disabled={isLocked}
               value={input}
               onChange={handleInputChange}
               onKeyDown={(e) => {
@@ -627,8 +708,8 @@ export default function ChatRoom({
               resize-none
               overflow-y-auto
               h-auto
-              max-h-[calc(1.5rem*1.5*5)]
-              "
+              max-h-[calc(1.5rem*6)]
+              " // max-h-[calc(1.5rem*6)] for 6 lines
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -637,6 +718,7 @@ export default function ChatRoom({
           </div>
 
           <button
+            disabled={isLocked}
             onClick={handleSend}
             className="px-4 py-2.5 h-full rounded-3xl text-[#555E63] hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 bg-transparent cursor-pointer transition duration-300 flex justify-center items-center"
           >
