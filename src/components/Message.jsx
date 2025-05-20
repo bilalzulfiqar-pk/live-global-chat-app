@@ -31,7 +31,7 @@ const Message = React.memo(function Message({ msg, self }) {
 
   if (msg.user === "System") {
     return (
-      <div className="flex justify-center text-xs text-gray-400 py-2">
+      <div className="flex justify-center text-xs text-gray-400 py-2 mb-3">
         <span className="italic">{msg.text}</span>
       </div>
     );

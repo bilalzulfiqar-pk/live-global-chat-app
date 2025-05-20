@@ -36,11 +36,6 @@ export default function ChatRoom({
   const clientIdRef = useRef(null);
   const inputRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
-  const typingUsersRef = useRef([]);
-
-  // useEffect(() => {
-  //   console.log(messages.length);
-  // }, [messages]);
 
   useEffect(() => {
     let clientId = localStorage.getItem("chatapp-ClientId");
@@ -140,35 +135,18 @@ export default function ChatRoom({
         }
       );
 
-      if (typingUsersRef.current.length > 1) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            ...msg,
-            time: localTime,
-          },
-        ]);
-        if (msg.user !== username) {
-          messageSound.current
-            .play()
-            .catch((e) => console.warn("Autoplay blocked", e));
-        }
-      } else {
-        // Delay to improve user experience for typing animation for single typing user
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              ...msg,
-              time: localTime,
-            },
-          ]);
-          if (msg.user !== username) {
-            messageSound.current
-              .play()
-              .catch((e) => console.warn("Autoplay blocked", e));
-          }
-        }, 200);
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...msg,
+          time: localTime,
+        },
+      ]);
+
+      if (msg.user !== username) {
+        messageSound.current
+          .play()
+          .catch((e) => console.warn("Autoplay blocked", e));
       }
     });
 
@@ -189,10 +167,10 @@ export default function ChatRoom({
 
     socket.on("update-typing-users", (usersArray) => {
       // Filter out yourself so you don't see your own name
-      const filtered = usersArray.filter((u) => u !== username);
-      setTypingUsers(filtered);
-      // Right away mirror into the ref:
-      typingUsersRef.current = filtered;
+      // const filtered = usersArray.filter((u) => u !== username);
+      // setTypingUsers(filtered);
+
+      setTypingUsers(usersArray.filter((u) => u !== username));
     });
 
     socket.on("active-users", (users) => {
@@ -315,13 +293,13 @@ export default function ChatRoom({
       setCurrentIdx(0);
     }
 
-    // Cycle every 2 seconds (adjust as you like)
+    // Cycle every 2 seconds
     const id = setInterval(() => {
       setCurrentIdx((prev) => {
         // move to next index, wrap around
         return (prev + 1) % typingUsers.length;
       });
-    }, 2500);
+    }, 2000);
 
     return () => clearInterval(id);
   }, [typingUsers]);
@@ -511,13 +489,14 @@ export default function ChatRoom({
 
       {/* Messages */}
       <div className="flex-1 relative min-h-0">
-        <div className="h-full overflow-y-auto px-4 py-3 space-y-3 relative scroll-smooth">
+        <div className="h-full flex flex-col overflow-y-auto px-4 py-3 relative scroll-smooth">
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
+
               // transition={{
               //   duration: 0.3,
               //   ...(typingUsersRef.current.length > 1 ? { delay: 0.3 } : {}),
@@ -526,7 +505,7 @@ export default function ChatRoom({
               <Message msg={msg} self={msg.clientId === clientIdRef.current} />
             </motion.div>
           ))}
-          <div className={`h-5 mb-0`}>
+          <div className={`min-h-5 mb-0 mt-auto`}>
             <AnimatePresence mode="wait">
               {typingUsers.length > 0 && (
                 <motion.div
@@ -535,7 +514,12 @@ export default function ChatRoom({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{
+                    duration: 0.2,
+                    // layout: {
+                    //   duration: 0.05,
+                    // },
+                  }}
                   className="text-sm text-gray-500 dark:text-gray-400 italic"
                 >
                   {typingUsers[currentIdx]} is typing...
