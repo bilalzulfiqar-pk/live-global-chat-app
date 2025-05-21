@@ -553,7 +553,7 @@ export default function ChatRoom({
   //   );
 
   return (
-    <div className="h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div className="h-full bg-white dark:bg-gray-900 transition-colors duration-300">
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div
@@ -562,7 +562,7 @@ export default function ChatRoom({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex justify-center items-center h-screen bg-white dark:bg-gray-900"
+            className="h-full flex justify-center items-center bg-white dark:bg-gray-900"
           >
             <div className="text-lg text-gray-700 dark:text-gray-300 animate-pulse">
               Connecting...
@@ -575,8 +575,9 @@ export default function ChatRoom({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
+            className="h-full"
           >
-            <div className="flex flex-col h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
+            <div className="flex flex-col h-full bg-white dark:bg-gray-900 transition-colors duration-300">
               {/* Header */}
               {/* dark:bg-gradient-to-r dark:from-[#2C3E50] dark:via-[#34495E] dark:to-[#5D6D7E]
               dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
@@ -718,7 +719,7 @@ export default function ChatRoom({
               </div>
 
               {/* Input Area */}
-              <div className="flex flex-col items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-l from-blue-400 to-blue-500 dark:from-none dark:to-none dark:bg-none dark:bg-gray-800 gap-2 relative">
+              <div className="flex flex-col items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-l from-blue-400 to-blue-500 dark:from-none dark:to-none dark:bg-none dark:bg-gray-800 gap-2">
                 <div className="flex items-center w-full bg-white dark:bg-gray-700 rounded-3xl shadow h-full relative">
                   <AnimatePresence>
                     {isLocked && (
@@ -727,7 +728,7 @@ export default function ChatRoom({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="text-red-500 absolute inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center"
+                        className="text-red-500 absolute pr-10 pl-8 leading-[1.2] text-sm min-[530px]:text-base inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center"
                       >
                         You're sending messages too fast. Please wait{" "}
                         {timeoutRemaining}

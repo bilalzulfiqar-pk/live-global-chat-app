@@ -49,7 +49,7 @@ function App() {
   return (
     <>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
-      <div className="bg-white dark:bg-gray-900 transition-colors duration-300">
+      <div className="h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
         <AnimatePresence mode="wait">
           {username ? (
             <motion.div
@@ -58,6 +58,7 @@ function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
+              className="h-full"
             >
               <ChatRoom
                 username={username}
@@ -72,6 +73,7 @@ function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
+              className="h-full"
             >
               <JoinScreen onJoin={handleJoin} />
             </motion.div>
