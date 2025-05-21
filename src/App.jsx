@@ -15,20 +15,30 @@ function App() {
   // });
 
   useEffect(() => {
-    // let clientId = localStorage.getItem("chatapp-ClientId");
-    // if (!clientId) {
-    //   clientId = uuidv4();
-    //   localStorage.setItem("chatapp-ClientId", clientId);
-    // }
-
-    const savedUsername = localStorage.getItem("chatapp-username");
-    if (savedUsername) {
-      // Rename scenario
-      // socket.emit("change-username", { clientId, oldName: savedUsername, newName: savedUsername });
-
-      setUsername(savedUsername);
-    }
+    // Use requestAnimationFrame to allow animation setup before setting username
+    requestAnimationFrame(() => {
+      const savedUsername = localStorage.getItem("chatapp-username");
+      setTimeout(() => {
+        setUsername(savedUsername || "");
+      }, 300);
+    });
   }, []);
+
+  // useEffect(() => {
+  //   // let clientId = localStorage.getItem("chatapp-ClientId");
+  //   // if (!clientId) {
+  //   //   clientId = uuidv4();
+  //   //   localStorage.setItem("chatapp-ClientId", clientId);
+  //   // }
+
+  //   const savedUsername = localStorage.getItem("chatapp-username");
+  //   if (savedUsername) {
+  //     // Rename scenario
+  //     // socket.emit("change-username", { clientId, oldName: savedUsername, newName: savedUsername });
+
+  //     setUsername(savedUsername);
+  //   }
+  // }, []);
 
   const handleJoin = (name) => {
     const oldName = localStorage.getItem("chatapp-username");
@@ -45,6 +55,13 @@ function App() {
     // Show join screen without clearing clientId
     setUsername("");
   };
+
+  if (username === null) {
+    // Avoid rendering anything on first frame
+    return (
+      <div className="h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300"></div>
+    );
+  }
 
   return (
     <>

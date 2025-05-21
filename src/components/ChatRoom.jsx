@@ -7,9 +7,9 @@ import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresen
 import { EmojiButton } from "@joeattardi/emoji-button";
 import { Smile, Send } from "lucide-react";
 import { FaUser } from "react-icons/fa";
+import { HiStatusOnline } from "react-icons/hi";
 import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
-import { s } from "framer-motion/client";
 
 export default function ChatRoom({
   username,
@@ -605,8 +605,11 @@ export default function ChatRoom({
                 </div>
 
                 {/* Active Users Count (Only the total number) */}
-                <div className="text-sm sm:text-base dark:text-white order-3 w-full sm:w-auto sm:order-2">
-                  <strong>🟢 Active Users: {activeUsers.length}</strong>
+                <div className="text-sm sm:text-base dark:text-white order-3 w-full sm:w-auto sm:order-2 flex items-center justify-between">
+                  <strong className="flex items-center justify-center gap-1">
+                    <HiStatusOnline className="text-2xl "/>
+                    Active Users: {activeUsers.length}
+                  </strong>
                   <button
                     onClick={() => setSidebarOpen(true)}
                     className="ml-2.5 text-white dark:text-gray-300 shadow-sm dark:bg-[#1E2939] dark:hover:bg-[#171e29] cursor-pointer bg-blue-400 px-2.5 pr-3 py-1.5 rounded-full hover:bg-blue-500 transition-colors duration-300 text-sm"
@@ -823,8 +826,9 @@ export default function ChatRoom({
                       transition={{ duration: 0.2 }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <h2 className="text-xl text-blue-500 dark:text-white font-semibold mb-4">
-                        🟢 Active Users
+                      <h2 className="text-xl flex items-center gap-1 text-blue-500 dark:text-white font-semibold mb-4">
+                        {/* <HiStatusOnline className="text-3xl" />  */}
+                        Active Users
                       </h2>
                       <ul className="space-y-2">
                         {activeUsers.map((user, idx) => (
