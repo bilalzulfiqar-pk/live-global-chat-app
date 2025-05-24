@@ -72,13 +72,13 @@ export default function JoinScreen({ onJoin }) {
           dark:hover:to-blue-500
             dark:hover:shadow-blue-500/50
             dark:hover:shadow-lg
-          focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50`}
+          `} // focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50
         >
           {/* {loading ? "Joining..." : "Join Chat"} */}
           Connect
         </button>
 
-        {error && (
+        {error && !username.trim() && (
           <div className="absolute bottom-12 text-sm text-red-500 -mt-2">
             {error}
           </div>
