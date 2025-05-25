@@ -5,6 +5,7 @@ import ChatRoom from "./components/ChatRoom";
 import { Toaster } from "react-hot-toast";
 // import { v4 as uuidv4 } from "uuid";
 import { AnimatePresence, motion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const [username, setUsername] = useState(null);
@@ -97,6 +98,8 @@ function App() {
           )}
         </AnimatePresence>
       </div>
+
+      <Analytics />
     </>
   );
 }
