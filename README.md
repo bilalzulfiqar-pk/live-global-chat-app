@@ -20,6 +20,7 @@ https://live-global-chat-app.vercel.app/
 - Light / Dark theme toggle with system preference support  
 - Smooth animations via Framer Motion  
 - Emoji picker integration
+- Spam control mechanism to prevent abuse: if a user sends more than 5 messages within 5 seconds, they are temporarily restricted from sending new messages for 30 seconds
 
 ---
 
