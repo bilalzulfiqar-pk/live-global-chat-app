@@ -454,7 +454,10 @@ export default function ChatRoom({
   //   }, [messages]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+    if (loading) return;
     const chatContainer = chatEndRef.current?.parentNode; // Assuming the parent is the scrollable div
+    // console.log("chatContainer", chatContainer);
     if (!chatContainer) return;
 
     const threshold = 200; // px, how close to bottom counts as "at bottom"
@@ -478,9 +481,13 @@ export default function ChatRoom({
     return () => {
       chatContainer.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, 1000); // Delay to ensure the chat container is rendered
+
+  return () => clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
+    // console.log("messages changed, isAtBottom:", isAtBottom);
     if (!isAtBottom) return;
 
     chatEndRef.current.scrollIntoView({ behavior: "smooth" });
