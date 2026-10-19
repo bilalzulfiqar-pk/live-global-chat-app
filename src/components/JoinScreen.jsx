@@ -27,7 +27,7 @@ export default function JoinScreen({ onJoin }) {
   return (
     <div className="flex items-center justify-center h-full bg-gray-100 transition-colors dark:bg-gray-900 relative">
       <div
-        className="flex relative flex-col m-6 items-center justify-center transition-colors p-10 py-20 md:p-20 rounded-2xl shadow-lg bg-white dark:bg-gray-800 gap-6 w-md animate-view-fade"
+        className="flex relative flex-col m-6 items-center justify-center transition-colors p-10 py-20 md:p-20 rounded-2xl shadow-lg bg-white dark:bg-gray-800 gap-6 w-md animate-join-card"
       >
         <h1 className="text-[27px] whitespace-nowrap sm:text-3xl font-bold transition-colors text-gray-800 dark:text-white mb-2">
           Live Global Chat

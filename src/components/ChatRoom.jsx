@@ -646,7 +646,7 @@ export default function ChatRoom({
                 {newMessages && !isAtBottom && (
                   <div
                     onClick={handleScrollToBottom}
-                    className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer animate-quick-fade"
+                    className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer animate-scroll-button"
                   >
                     New Messages
                   </div>
@@ -655,7 +655,7 @@ export default function ChatRoom({
                 {!newMessages && showScrollButton && !isAtBottom && (
                   <button
                     onClick={handleScrollToBottom}
-                    className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300 animate-quick-fade"
+                    className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300 animate-scroll-button"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -765,7 +765,7 @@ export default function ChatRoom({
                 onClick={() => setSidebarOpen(false)}
               >
                 <div
-                  className={`absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg transform transition-transform duration-300 ease-out ${
+                  className={`absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg transform transition-transform duration-200 ease-out ${
                     sidebarOpen ? "translate-x-0" : "translate-x-full"
                   }`}
                   onClick={(e) => e.stopPropagation()}

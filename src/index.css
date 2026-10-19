@@ -56,7 +56,7 @@ body {
     opacity 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms ease;
 }
 
-/* GPU-Accelerated Hardware Transitions (Flicker-Free) */
+/* GPU-Accelerated Hardware Transitions (Flicker-Free, Exact Original Timings & Curves) */
 @keyframes viewFadeIn {
   from {
     opacity: 0;
@@ -68,15 +68,47 @@ body {
   }
 }
 
+.animate-view-fade {
+  animation: viewFadeIn 400ms ease both;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@keyframes joinCardEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+}
+
+.animate-join-card {
+  animation: joinCardEnter 1000ms ease-out both;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 @keyframes messageEnter {
   from {
     opacity: 0;
-    transform: translate3d(0, 8px, 0);
+    transform: translate3d(0, 10px, 0);
   }
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
   }
+}
+
+.animate-message-enter {
+  animation: messageEnter 300ms ease both;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 @keyframes quickFadeIn {
@@ -88,22 +120,13 @@ body {
   }
 }
 
-.animate-view-fade {
-  animation: viewFadeIn 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.animate-message-enter {
-  animation: messageEnter 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
 .animate-quick-fade {
-  animation: quickFadeIn 200ms ease-out both;
+  animation: quickFadeIn 200ms ease both;
+  will-change: opacity;
+}
+
+.animate-scroll-button {
+  animation: quickFadeIn 300ms ease both;
   will-change: opacity;
 }
 
