@@ -1,11 +1,18 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import ThemeToggle from "./ThemeToggle";
 
 export default function JoinScreen({ onJoin }) {
   const [username, setUsername] = useState("");
   // const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus({ preventScroll: true });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleJoin = () => {
     if (username.trim()) {
@@ -19,21 +26,18 @@ export default function JoinScreen({ onJoin }) {
 
   return (
     <div className="flex items-center justify-center h-full bg-gray-100 transition-colors dark:bg-gray-900 relative">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        className="flex relative flex-col m-6 items-center justify-center transition-colors p-10 py-20 md:p-20 rounded-2xl shadow-lg bg-white dark:bg-gray-800 gap-6 w-md"
+      <div
+        className="flex relative flex-col m-6 items-center justify-center transition-colors p-10 py-20 md:p-20 rounded-2xl shadow-lg bg-white dark:bg-gray-800 gap-6 w-md animate-view-fade"
       >
         <h1 className="text-[27px] whitespace-nowrap sm:text-3xl font-bold transition-colors text-gray-800 dark:text-white mb-2">
           Live Global Chat
         </h1>
 
         <input
+          ref={inputRef}
           type="text"
           placeholder="Enter your name"
           value={username}
-          autoFocus
           maxLength={15}
           onChange={(e) => setUsername(e.target.value)}
           onKeyDown={(e) => {
@@ -83,7 +87,7 @@ export default function JoinScreen({ onJoin }) {
             {error}
           </div>
         )}
-      </motion.div>
+      </div>
 
       <div className="absolute top-4 right-4">
         <ThemeToggle />

@@ -3,7 +3,6 @@ import Message from "./Message";
 import socket from "../socket";
 // import EmojiPicker from "emoji-picker-react";
 import ThemeToggle from "./ThemeToggle";
-import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence for exit animations
 import { EmojiButton } from "@joeattardi/emoji-button";
 import { Smile, Send } from "lucide-react";
 import { FaUser } from "react-icons/fa";
@@ -206,11 +205,8 @@ export default function ChatRoom({
       setIsConnected(true);
     });
 
-    socket.on("connect_error", (error) => {
-      console.log(
-        "Connection error"
-        // , error
-      );
+    socket.on("connect_error", () => {
+      console.log("Connection error");
       setIsConnected(false);
     });
 
@@ -561,30 +557,18 @@ export default function ChatRoom({
 
   return (
     <div className="h-full bg-white dark:bg-gray-900 transition-colors duration-300">
-      <AnimatePresence mode="wait">
-        {loading ? (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="h-full flex justify-center items-center bg-white dark:bg-gray-900"
-          >
-            <div className="text-lg text-gray-700 dark:text-gray-300 animate-pulse">
-              Connecting...
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="main"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="h-full"
-          >
-            <div className="flex flex-col h-full bg-white dark:bg-gray-900 transition-colors duration-300">
+      {loading ? (
+        <div
+          key="loading"
+          className="h-full flex justify-center items-center bg-white dark:bg-gray-900 animate-view-fade"
+        >
+          <div className="text-lg text-gray-700 dark:text-gray-300 animate-pulse">
+            Connecting...
+          </div>
+        </div>
+      ) : (
+        <div key="main" className="h-full animate-view-fade">
+          <div className="flex flex-col h-full bg-white dark:bg-gray-900 transition-colors duration-300">
               {/* Header */}
               {/* dark:bg-gradient-to-r dark:from-[#2C3E50] dark:via-[#34495E] dark:to-[#5D6D7E]
               dark:bg-gradient-to-r dark:from-[#3B4D64] dark:via-[#2D3748] dark:to-[#4A5568]         3 miidle via: 3a475d 374357 3e4c62
@@ -634,118 +618,75 @@ export default function ChatRoom({
               <div className="flex-1 relative min-h-0">
                 <div className="h-full flex flex-col overflow-y-auto px-4 py-3 relative scroll-smooth">
                   {messages.map((msg) => (
-                    <motion.div
+                    <div
                       key={msg.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-
-                      // transition={{
-                      //   duration: 0.3,
-                      //   ...(typingUsersRef.current.length > 1 ? { delay: 0.3 } : {}),
-                      // }}
+                      className="animate-message-enter"
                     >
                       <Message
                         msg={msg}
                         self={msg.clientId === clientIdRef.current}
                       />
-                    </motion.div>
+                    </div>
                   ))}
                   <div className={`min-h-5 mb-0 mt-auto`}>
-                    <AnimatePresence mode="wait">
-                      {typingUsers.length > 0 && (
-                        <motion.div
-                          // layout
-                          key={typingUsers[currentIdx]}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{
-                            duration: 0.2,
-                            // layout: {
-                            //   duration: 0.05,
-                            // },
-                          }}
-                          className="text-sm text-gray-500 dark:text-gray-400 italic"
-                        >
-                          {typingUsers[currentIdx]} is typing...
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {typingUsers.length > 0 && (
+                      <div
+                        key={typingUsers[currentIdx]}
+                        className="text-sm text-gray-500 dark:text-gray-400 italic animate-quick-fade"
+                      >
+                        {typingUsers[currentIdx]} is typing...
+                      </div>
+                    )}
                   </div>
 
                   <div ref={chatEndRef} />
                 </div>
 
                 {/* Scroll to bottom button */}
-                <AnimatePresence>
-                  {newMessages && !isAtBottom && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      onClick={() =>
-                        chatEndRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                        })
-                      }
-                      className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer"
-                    >
-                      New Messages
-                    </motion.div>
-                  )}
+                {newMessages && !isAtBottom && (
+                  <div
+                    onClick={handleScrollToBottom}
+                    className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 bg-blue-500 text-white dark:text-gray-300 p-3 rounded-full shadow-lg dark:bg-[#303A4B] dark:hover:bg-[#1E2939] hover:bg-blue-600 transition duration-300 cursor-pointer animate-quick-fade"
+                  >
+                    New Messages
+                  </div>
+                )}
 
-                  {!newMessages && showScrollButton && !isAtBottom && (
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      onClick={() =>
-                        chatEndRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                        })
-                      }
-                      className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300"
+                {!newMessages && showScrollButton && !isAtBottom && (
+                  <button
+                    onClick={handleScrollToBottom}
+                    className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 cursor-pointer dark:bg-[#303A4B] dark:hover:bg-[#1E2939] bg-blue-500 text-white dark:text-gray-300 p-3 flex justify-center items-center rounded-full shadow-lg hover:bg-blue-600 transition duration-300 animate-quick-fade"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="translate-y-[1px]"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="translate-y-[1px]"
-                      >
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </motion.button>
-                  )}
-                </AnimatePresence>
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                )}
               </div>
 
               {/* Input Area */}
               <div className="flex flex-col items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-l from-blue-400 to-blue-500 dark:from-none dark:to-none dark:bg-none dark:bg-gray-800 gap-2">
                 <div className="flex items-center w-full bg-white dark:bg-gray-700 rounded-3xl shadow h-full relative">
-                  <AnimatePresence>
-                    {isLocked && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-red-500 absolute pr-10 pl-8 leading-[1.2] text-sm min-[530px]:text-base inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center"
-                      >
-                        You're sending messages too fast. Please wait{" "}
-                        {timeoutRemaining}
-                        s.
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {isLocked && (
+                    <div
+                      className="text-red-500 absolute pr-10 pl-8 leading-[1.2] text-sm min-[530px]:text-base inset-0 text-center py-2 bg-gray-50/80 dark:bg-gray-800/80 rounded-3xl flex items-center justify-center animate-quick-fade"
+                    >
+                      You're sending messages too fast. Please wait{" "}
+                      {timeoutRemaining}
+                      s.
+                    </div>
+                  )}
 
                   <div className="h-full">
                     <button
@@ -814,55 +755,48 @@ export default function ChatRoom({
                 </div>
               </div>
 
-              {/* Off-Canvas Sidebar for Active Users */}
-              <AnimatePresence>
-                {sidebarOpen && (
-                  <motion.div
-                    className="fixed inset-0 bg-gray-800/50 z-50"
-                    onClick={() => setSidebarOpen(false)}
-                    initial={{ opacity: 0 }} // Sidebar starts invisible
-                    animate={{ opacity: 1 }} // Sidebar becomes fully visible
-                    exit={{ opacity: 0 }} // Sidebar fades out on exit
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div
-                      className="absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg"
-                      initial={{ x: "100%" }} // Initially off-screen to the right
-                      animate={{ x: 0 }} // Sidebar slides in
-                      exit={{ x: "100%" }} // Sidebar slides out to the right
-                      transition={{ duration: 0.2 }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <h2 className="text-xl flex items-center gap-1 text-blue-500 dark:text-white font-semibold mb-4">
-                        {/* <HiStatusOnline className="text-3xl" />  */}
-                        Active Users
-                      </h2>
-                      <ul className="space-y-2">
-                        {activeUsers.map((user, idx) => (
-                          <li
-                            key={idx}
-                            className="bg-blue-500 dark:bg-[#1E2939] px-4 py-2 rounded-lg text-white dark:text-white flex justify-between items-center"
-                          >
-                            <span>
-                              {idx + 1}. {user}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="absolute cursor-pointer dark:text-white top-4 right-4 text-white bg-blue-500 dark:bg-[#1E2939] dark:hover:bg-[#171e29] hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
+              {/* Off-Canvas Sidebar for Active Users (Flicker-Free CSS Drawer) */}
+              <div
+                className={`fixed inset-0 bg-gray-800/50 z-50 transition-opacity duration-300 ${
+                  sidebarOpen
+                    ? "opacity-100 pointer-events-auto"
+                    : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <div
+                  className={`absolute top-0 right-0 w-72 bg-white dark:bg-[#303A4B] text-gray-900 dark:text-white h-full p-6 overflow-y-auto rounded-lg shadow-lg transform transition-transform duration-300 ease-out ${
+                    sidebarOpen ? "translate-x-0" : "translate-x-full"
+                  }`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2 className="text-xl flex items-center gap-1 text-blue-500 dark:text-white font-semibold mb-4">
+                    {/* <HiStatusOnline className="text-3xl" />  */}
+                    Active Users
+                  </h2>
+                  <ul className="space-y-2">
+                    {activeUsers.map((user, idx) => (
+                      <li
+                        key={idx}
+                        className="bg-blue-500 dark:bg-[#1E2939] px-4 py-2 rounded-lg text-white dark:text-white flex justify-between items-center"
                       >
-                        ✕
-                      </button>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        <span>
+                          {idx + 1}. {user}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => setSidebarOpen(false)}
+                    className="absolute cursor-pointer dark:text-white top-4 right-4 text-white bg-blue-500 dark:bg-[#1E2939] dark:hover:bg-[#171e29] hover:bg-blue-600 w-[32px] flex justify-center items-center px-3 py-1 rounded-full transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   );
 }

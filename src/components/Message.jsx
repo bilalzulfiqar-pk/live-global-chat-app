@@ -29,32 +29,24 @@ const Message = React.memo(function Message({ msg, self }) {
     return colors[index];
   };
 
-  if (msg.user === "System") {
+  const isSystem = msg.user === "System";
+
+  const { isOnlyEmojis, emojiCount } = useMemo(() => {
+    if (isSystem) return { isOnlyEmojis: false, emojiCount: 0 };
+    const only = isEmojisOnly(msg.text);
+    return {
+      isOnlyEmojis: only,
+      emojiCount: only ? (msg.text.match(countEmojiRegex) || []).length : 0,
+    };
+  }, [msg.text, isSystem]);
+
+  if (isSystem) {
     return (
       <div className="flex justify-center text-xs text-gray-400 py-2 mb-3">
         <span className="italic">{msg.text}</span>
       </div>
     );
   }
-
-  // const isEmojisOnly = (text) => {
-  //   const emojiOnlyRegex =
-  //     /^(\s*(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier_Base})\s*)+$/u;
-  //   return emojiOnlyRegex.test(text);
-  // };
-
-  // const isOnlyEmojis = isEmojisOnly(msg.text);
-  // const emojiCount = isOnlyEmojis
-  //   ? (msg.text.match(/\p{Extended_Pictographic}/gu) || []).length
-  //   : 0;
-
-  const { isOnlyEmojis, emojiCount } = useMemo(() => {
-    const only = isEmojisOnly(msg.text);
-    return {
-      isOnlyEmojis: only,
-      emojiCount: only ? (msg.text.match(countEmojiRegex) || []).length : 0,
-    };
-  }, [msg.text]);
 
   // console.log("Emoji Count: ", emojiCount);
 
