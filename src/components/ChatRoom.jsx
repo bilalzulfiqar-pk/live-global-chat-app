@@ -757,7 +757,7 @@ export default function ChatRoom({
 
               {/* Off-Canvas Sidebar for Active Users (Flicker-Free CSS Drawer) */}
               <div
-                className={`fixed inset-0 bg-gray-800/50 z-50 transition-opacity duration-300 ${
+                className={`fixed inset-0 overflow-hidden bg-gray-800/50 z-50 transition-opacity duration-300 ${
                   sidebarOpen
                     ? "opacity-100 pointer-events-auto"
                     : "opacity-0 pointer-events-none"

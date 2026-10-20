@@ -58,14 +58,14 @@ function App() {
   if (username === null) {
     // Avoid rendering anything on first frame
     return (
-      <div className="h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300"></div>
+      <div className="h-[100vh] h-dvh-100 overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-300"></div>
     );
   }
 
   return (
     <>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
-      <div className="h-[100vh] h-dvh-100 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <div className="h-[100vh] h-dvh-100 overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-300">
         {username ? (
           <div key="chat" className="h-full animate-view-fade">
             <ChatRoom
